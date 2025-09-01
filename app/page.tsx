@@ -1,10 +1,15 @@
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "./api/auth/[...nextauth]/route"
+'use client'
+
+import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
 
 // サーバーコンポーネントでセッション情報を表示するコンポーネント
-async function UserSession() {
-  const session = await getServerSession(authOptions)
+function UserSession() {
+  const { data: session, status } = useSession()
+
+  if (status === "loading") {
+    return <div className="text-center">Loading session...</div>
+  }
 
   if (!session) {
     return (
@@ -21,9 +26,12 @@ async function UserSession() {
     <div className="text-center">
       <p className="mb-2">ようこそ, {session.user?.email} さん</p>
       <p className="text-sm text-gray-500 mb-6">あなたはログインしています。</p>
-      <Link href="/api/auth/signout" className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+      <button
+        onClick={() => signOut({ callbackUrl: '/login' })}
+        className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+      >
         ログアウト
-      </Link>
+      </button>
 
       <div className="mt-8 p-4 bg-gray-100 rounded-lg text-left text-xs overflow-x-auto">
         <h3 className="font-bold mb-2">セッション情報 (デバッグ用)</h3>
