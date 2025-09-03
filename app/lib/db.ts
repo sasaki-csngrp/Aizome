@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import { unstable_noStore as noStore } from 'next/cache';
 import { NewReport, Report } from './models';
 
 export async function insertReport(report: NewReport): Promise<Report> {
@@ -38,8 +39,19 @@ export async function getAllReportsFromDb(): Promise<Report[]> {
     `;
     return rows;
   } catch (error) {
-    console.error('Error fetching reports from DB:', error);
-    throw new Error('Failed to fetch reports from database.');
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch reports.');
+  }
+}
+
+export async function deleteReportById(id: string) {
+  noStore();
+  try {
+    await sql`DELETE FROM reports WHERE id = ${id}`;
+    return { message: 'Report deleted successfully.' };
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to delete report.');
   }
 }
 

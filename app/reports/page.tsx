@@ -1,5 +1,6 @@
 import { getAllReports } from "@/app/lib/services";
 import Link from "next/link";
+import DeleteButton from "@/app/components/DeleteButton";
 
 export default async function ReportsPage() {
   const reports = await getAllReports();
@@ -36,9 +37,7 @@ export default async function ReportsPage() {
                 <Link href={`/reports/${report.id}/edit`} className="text-green-600 hover:underline">
                   編集
                 </Link>
-                <button className="text-red-500 hover:underline">
-                  削除
-                </button>
+                <DeleteButton reportId={report.id} />
               </div>
             </div>
           </div>
