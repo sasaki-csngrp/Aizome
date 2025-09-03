@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // Assuming authOptions are exported here
-import { insertReport, getAllReportsFromDb } from "./db";
+import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb } from "./db";
 import { NewReport, Report } from "./models";
 
 export async function createReport(title: string, content: string): Promise<Report> {
@@ -27,5 +27,36 @@ export async function getAllReports(): Promise<Report[]> {
   } catch (error) {
     console.error('Error fetching reports:', error);
     throw new Error('Failed to fetch reports.');
+  }
+}
+
+export async function getReportById(id: string): Promise<Report | null> {
+  try {
+    const report = await getReportByIdFromDb(id);
+    return report;
+  } catch (error) {
+    console.error('Error fetching report by ID:', error);
+    throw new Error('Failed to fetch report by ID.');
+  }
+}
+
+export async function updateReport(report: Report): Promise<Report> {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("User not authenticated.");
+  }
+
+  const existingReport = await getReportByIdFromDb(report.id);
+  if (!existingReport || existingReport.author_id !== session.user.id) {
+    throw new Error("Unauthorized to update this report.");
+  }
+
+  try {
+    const updatedReport = await updateReportInDb(report);
+    return updatedReport;
+  } catch (error) {
+    console.error('Error updating report:', error);
+    throw new Error('Failed to update report.');
   }
 }

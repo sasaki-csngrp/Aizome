@@ -1,17 +1,35 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import MarkdownRenderer from '@/app/components/MarkdownRenderer'
+import { Report } from '@/app/lib/models'
+import { useRouter } from 'next/navigation'
 
-export default function ReportForm() {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+interface ReportFormProps {
+  initialReport?: Report;
+}
+
+export default function ReportForm({ initialReport }: ReportFormProps) {
+  const [title, setTitle] = useState(initialReport?.title || '')
+  const [content, setContent] = useState(initialReport?.content || '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const router = useRouter();
+
+  useEffect(() => {
+    if (initialReport) {
+      setTitle(initialReport.title);
+      setContent(initialReport.content);
+    } else {
+      setTitle('');
+      setContent('');
+    }
+  }, [initialReport]);
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -20,8 +38,11 @@ export default function ReportForm() {
     setSuccess(null)
 
     try {
-      const response = await fetch('/api/reports', {
-        method: 'POST',
+      const method = initialReport ? 'PUT' : 'POST';
+      const url = initialReport ? `/api/reports/${initialReport.id}` : '/api/reports';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -30,14 +51,17 @@ export default function ReportForm() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'レポートの作成に失敗しました。')
+        throw new Error(errorData.error || (initialReport ? 'レポートの更新に失敗しました。' : 'レポートの作成に失敗しました。'))
       }
 
       const result = await response.json()
-      setSuccess('レポートが正常に作成されました！')
-      setTitle('') // Clear form
-      setContent('') // Clear form
-      console.log('Report created:', result)
+      setSuccess(initialReport ? 'レポートが正常に更新されました！' : 'レポートが正常に作成されました！')
+      if (!initialReport) {
+        setTitle('')
+        setContent('')
+      }
+      console.log('Report operation successful:', result)
+      router.push('/reports');
     } catch (err: unknown) {
       let errorMessage = '予期せぬエラーが発生しました。';
       if (err instanceof Error) {
@@ -54,7 +78,7 @@ export default function ReportForm() {
     <div className="w-full max-w-4xl bg-white p-8 rounded-lg shadow-lg flex flex-col md:flex-row gap-8">
       {/* Left Column: Input Form */}
       <form onSubmit={handleSubmit} className="flex-1 space-y-6">
-        <h1 className="text-3xl font-bold text-center mb-6">新規レポート作成</h1>
+        <h1 className="text-3xl font-bold text-center mb-6">{initialReport ? 'レポート編集' : '新規レポート作成'}</h1>
 
         {error && <p className="text-red-500 text-center">{error}</p>}
         {success && <p className="text-green-500 text-center">{success}</p>}
@@ -90,7 +114,7 @@ export default function ReportForm() {
           className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
           disabled={isSubmitting}
         >
-          {isSubmitting ? '作成中...' : 'レポートを保存'}
+          {isSubmitting ? (initialReport ? '更新中...' : '作成中...') : (initialReport ? 'レポートを更新' : 'レポートを保存')}
         </button>
       </form>
 
