@@ -75,7 +75,7 @@ export default function ReportForm({ initialReport }: ReportFormProps) {
   }
 
   return (
-    <div className="w-full max-w-4xl bg-white p-8 rounded-lg shadow-lg flex flex-col md:flex-row gap-8">
+    <div className="w-full bg-white p-8 rounded-lg shadow-lg flex flex-col md:flex-row gap-8">
       {/* Left Column: Input Form */}
       <form onSubmit={handleSubmit} className="flex-1 space-y-6">
         <h1 className="text-3xl font-bold text-center mb-6">{initialReport ? 'レポート編集' : '新規レポート作成'}</h1>

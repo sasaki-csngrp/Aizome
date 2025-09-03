@@ -1,13 +1,14 @@
 import { getAllReports } from "@/app/lib/services";
 import Link from "next/link";
 import DeleteButton from "@/app/components/DeleteButton";
-import { getServerSession } from "next-auth"; // 追加
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // 追加
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { Button } from "@/components/ui/button";
 
 export default async function ReportsPage() {
   const reports = await getAllReports();
-  const session = await getServerSession(authOptions); // 追加
-  const currentUserId = session?.user?.id; // 追加
+  const session = await getServerSession(authOptions);
+  const currentUserId = session?.user?.id;
 
   const formatDate = (dateString: Date) => {
     const date = new Date(dateString);
@@ -22,11 +23,18 @@ export default async function ReportsPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Reports</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Reports</h1>
+        <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+          <Link href="/reports/new">新しいレポートを作成</Link>
+        </Button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {reports.map((report) => (
           <div key={report.id} className="border p-4 rounded-lg shadow-md flex flex-col">
-            <h2 className="text-xl font-semibold mb-2">{report.title}</h2>
+            <Link href={`/reports/${report.id}`} className="hover:underline">
+              <h2 className="text-xl font-semibold mb-2">{report.title}</h2>
+            </Link>
             <p className="text-gray-600 text-sm mb-2">投稿者: {report.authorname || 'Unknown'}</p>
             <p className="text-gray-700 mb-4 line-clamp-3 flex-grow">{report.content}</p>
             <div className="text-sm text-gray-500 mb-2">
