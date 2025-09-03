@@ -36,7 +36,11 @@ export default function DeleteButton({ reportId }: DeleteButtonProps) {
   };
 
   return (
-    <Button variant="destructive" onClick={handleDelete}>
+    <Button
+      variant="destructive"
+      onClick={handleDelete}
+      className="bg-red-200 hover:bg-red-500 text-red-800 hover:text-white"
+    >
       削除
     </Button>
   );

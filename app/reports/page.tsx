@@ -1,9 +1,13 @@
 import { getAllReports } from "@/app/lib/services";
 import Link from "next/link";
 import DeleteButton from "@/app/components/DeleteButton";
+import { getServerSession } from "next-auth"; // 追加
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // 追加
 
 export default async function ReportsPage() {
   const reports = await getAllReports();
+  const session = await getServerSession(authOptions); // 追加
+  const currentUserId = session?.user?.id; // 追加
 
   const formatDate = (dateString: Date) => {
     const date = new Date(dateString);
@@ -33,12 +37,14 @@ export default async function ReportsPage() {
               <Link href={`/reports/${report.id}`} className="text-blue-500 hover:underline">
                 詳細表示
               </Link>
-              <div className="space-x-2">
-                <Link href={`/reports/${report.id}/edit`} className="text-green-600 hover:underline">
-                  編集
-                </Link>
-                <DeleteButton reportId={report.id} />
-              </div>
+              {report.author_id === currentUserId && ( // 条件分岐を追加
+                <div className="space-x-2">
+                  <Link href={`/reports/${report.id}/edit`} className="text-green-600 hover:underline">
+                    編集
+                  </Link>
+                  <DeleteButton reportId={report.id} />
+                </div>
+              )}
             </div>
           </div>
         ))}
