@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // Assuming authOptions are exported here
-import { insertReport } from "./db";
+import { insertReport, getAllReportsFromDb } from "./db";
 import { NewReport, Report } from "./models";
 
 export async function createReport(title: string, content: string): Promise<Report> {
@@ -18,4 +18,14 @@ export async function createReport(title: string, content: string): Promise<Repo
 
   const report = await insertReport(newReport);
   return report;
+}
+
+export async function getAllReports(): Promise<Report[]> {
+  try {
+    const reports = await getAllReportsFromDb();
+    return reports;
+  } catch (error) {
+    console.error('Error fetching reports:', error);
+    throw new Error('Failed to fetch reports.');
+  }
 }

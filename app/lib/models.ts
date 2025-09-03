@@ -1,6 +1,7 @@
 export interface Report {
   id: string;
   author_id: string;
+  authorname?: string; // Corrected to lowercase to match DB response
   title: string;
   content: string;
   created_at: Date;

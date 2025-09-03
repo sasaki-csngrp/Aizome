@@ -20,3 +20,25 @@ export async function insertReport(report: NewReport): Promise<Report> {
     throw new Error('Failed to insert report into database.');
   }
 }
+
+export async function getAllReportsFromDb(): Promise<Report[]> {
+  try {
+    const { rows } = await sql<Report>`
+      SELECT
+        r.id,
+        r.author_id,
+        COALESCE(u.name, 'Unknown') as authorname,
+        r.title,
+        r.content,
+        r.created_at,
+        r.updated_at
+      FROM reports r
+      JOIN users u ON r.author_id = u.id
+      ORDER BY r.created_at DESC
+    `;
+    return rows;
+  } catch (error) {
+    console.error('Error fetching reports from DB:', error);
+    throw new Error('Failed to fetch reports from database.');
+  }
+}
