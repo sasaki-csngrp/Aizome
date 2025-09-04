@@ -3,14 +3,9 @@ import { notFound } from "next/navigation";
 import MarkdownRenderer from "@/app/components/MarkdownRenderer";
 import Link from "next/link";
 
-type PageProps = {
-  params: {
-    id: string;
-  };
-};
-
-export default async function ReportDetailPage({ params }: PageProps) {
-  const report = await getReportById(params.id);
+export default async function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const report = await getReportById(id);
 
   if (!report) {
     notFound();
