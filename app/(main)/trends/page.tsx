@@ -15,10 +15,7 @@ export default async function TrendsPage() {
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const seconds = date.getSeconds().toString().padStart(2, '0');
-    return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+    return `${year}/${month}/${day}`;
   };
 
   const renderContentWithLinks = (content: string) => {
@@ -38,7 +35,10 @@ export default async function TrendsPage() {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Trends</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Trends</h1>
+          <p className="text-left">Trendsの目的は、外部の最新情報を、広く<span className="font-bold">「発信」</span>していく事です。</p>
+        </div>
         <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
           <Link href="/reports/new?type=trend">新しいトレンドを作成</Link>
         </Button>

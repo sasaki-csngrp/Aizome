@@ -15,8 +15,8 @@ export default async function EditReportPage({ params }: { params: Promise<{ id:
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-4/5 mx-auto">
+    <div className="container mx-auto px-2 py-12 sm:px-6 lg:px-8">
+      <div className="w-full mx-auto">
         <ReportForm initialReport={report} />
         <div className="mt-8">
           <Link href="/reports" className="text-indigo-600 hover:text-indigo-900">

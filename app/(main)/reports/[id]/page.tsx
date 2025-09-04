@@ -18,17 +18,13 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
       timeZone: 'Asia/Tokyo'
     }).replace(',', ''); // "YYYY/MM/DD, HH:mm:ss" のカンマを削除
   };
 
   return (
-    <main className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-4/5 mx-auto">
+    <main className="container mx-auto px-2 py-12 sm:px-6 lg:px-8">
+      <div className="w-full mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
             {report.title}
