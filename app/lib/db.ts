@@ -5,9 +5,9 @@ import { NewReport, Report } from './models';
 export async function insertReport(report: NewReport): Promise<Report> {
   try {
     const result = await sql<Report>`
-      INSERT INTO reports (author_id, title, content)
-      VALUES (${report.author_id}, ${report.title}, ${report.content})
-      RETURNING id, author_id, title, content, created_at, updated_at;
+      INSERT INTO reports (author_id, title, content, type)
+      VALUES (${report.author_id}, ${report.title}, ${report.content}, ${report.type})
+      RETURNING id, author_id, title, content, created_at as "createdAt", updated_at as "updatedAt", type;
     `;
     // The `sql` function returns an object with a `rows` array.
     // We expect only one row to be returned for an INSERT with RETURNING.
@@ -31,16 +31,42 @@ export async function getAllReportsFromDb(): Promise<Report[]> {
         COALESCE(u.name, 'Unknown') as authorname,
         r.title,
         r.content,
-        r.created_at,
-        r.updated_at
+        r.created_at as "createdAt",
+        r.updated_at as "updatedAt",
+        r.type
       FROM reports r
       JOIN users u ON r.author_id = u.id
+      WHERE r.type = 'report'
       ORDER BY r.created_at DESC
     `;
     return rows;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch reports.');
+  }
+}
+
+export async function getTrendsFromDb(): Promise<Report[]> {
+  try {
+    const { rows } = await sql<Report>`
+      SELECT
+        r.id,
+        r.author_id,
+        COALESCE(u.name, 'Unknown') as authorname,
+        r.title,
+        r.content,
+        r.created_at as "createdAt",
+        r.updated_at as "updatedAt",
+        r.type
+      FROM reports r
+      JOIN users u ON r.author_id = u.id
+      WHERE r.type = 'trend'
+      ORDER BY r.created_at DESC
+    `;
+    return rows;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch trends.');
   }
 }
 
@@ -64,8 +90,9 @@ export async function getReportByIdFromDb(id: string): Promise<Report | null> {
         COALESCE(u.name, 'Unknown') as authorname,
         r.title,
         r.content,
-        r.created_at,
-        r.updated_at
+        r.created_at as "createdAt",
+        r.updated_at as "updatedAt",
+        r.type
       FROM reports r
       JOIN users u ON r.author_id = u.id
       WHERE r.id = ${id}
@@ -81,9 +108,9 @@ export async function updateReportInDb(report: Report): Promise<Report> {
   try {
     const result = await sql<Report>`
       UPDATE reports
-      SET title = ${report.title}, content = ${report.content}, updated_at = NOW()
+      SET title = ${report.title}, content = ${report.content}, type = ${report.type}, updated_at = NOW()
       WHERE id = ${report.id}
-      RETURNING id, author_id, title, content, created_at, updated_at;
+      RETURNING id, author_id, title, content, created_at as "createdAt", updated_at as "updatedAt", type;
     `;
     if (result.rows.length > 0) {
       return result.rows[0];

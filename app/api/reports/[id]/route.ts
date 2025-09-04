@@ -32,10 +32,10 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { title, content } = body;
+    const { title, content, type } = body; // typeも受け取る
 
-    if (!title || !content) {
-      return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
+    if (!title || !content || !type) { // typeも必須にする
+      return NextResponse.json({ error: 'Title, content, and type are required' }, { status: 400 });
     }
 
     const updatedReportData: Report = {
@@ -45,8 +45,10 @@ export async function PUT(
       // These fields will be ignored by updateReportInDb, but are required by the Report type
       // They will be fetched from the existing report in the service layer for authorization
       author_id: '', // Placeholder, will be checked in service layer
-      created_at: new Date(), // Placeholder
-      updated_at: new Date(), // Placeholder
+      createdAt: new Date(), // Placeholder
+      updatedAt: new Date(), // Placeholder
+      userId: '', // Placeholder
+      type: type, // 受け取ったtypeを設定
     };
 
     const updatedReport = await updateReport(updatedReportData);

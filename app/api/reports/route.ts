@@ -3,13 +3,13 @@ import { createReport } from '@/app/lib/services';
 
 export async function POST(request: Request) {
   try {
-    const { title, content } = await request.json();
+    const { title, content, type } = await request.json();
 
-    if (!title || !content) {
-      return NextResponse.json({ error: 'Title and content are required.' }, { status: 400 });
+    if (!title || !content || !type) {
+      return NextResponse.json({ error: 'Title, content, and type are required.' }, { status: 400 });
     }
 
-    const report = await createReport(title, content);
+    const report = await createReport(title, content, type);
     return NextResponse.json(report, { status: 201 }); // 201 Created
   } catch (error: unknown) {
     console.error('Error creating report:', error);

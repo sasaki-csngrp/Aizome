@@ -26,7 +26,7 @@ export default async function ReportsPage() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Reports</h1>
         <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-          <Link href="/reports/new">新しいレポートを作成</Link>
+          <Link href="/reports/new?type=report">新しいレポートを作成</Link>
         </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -38,8 +38,8 @@ export default async function ReportsPage() {
             <p className="text-gray-600 text-sm mb-2">投稿者: {report.authorname || 'Unknown'}</p>
             <p className="text-gray-700 mb-4 line-clamp-3 flex-grow">{report.content}</p>
             <div className="text-sm text-gray-500 mb-2">
-              <p>投稿日: {formatDate(report.created_at)}</p>
-              <p>更新日: {formatDate(report.updated_at)}</p>
+              <p>投稿日: {formatDate(report.createdAt)}</p>
+              <p>更新日: {formatDate(report.updatedAt)}</p>
             </div>
             <div className="flex justify-between items-center mt-auto">
               <Link href={`/reports/${report.id}`} className="text-blue-500 hover:underline">

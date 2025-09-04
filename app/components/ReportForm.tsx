@@ -10,11 +10,13 @@ import { useRouter } from 'next/navigation'
 
 interface ReportFormProps {
   initialReport?: Report;
+  initialType?: 'report' | 'trend'; // Add initialType
 }
 
-export default function ReportForm({ initialReport }: ReportFormProps) {
+export default function ReportForm({ initialReport, initialType }: ReportFormProps) {
   const [title, setTitle] = useState(initialReport?.title || '')
   const [content, setContent] = useState(initialReport?.content || '')
+  const [type, setType] = useState<'report' | 'trend'>(initialReport?.type || initialType || 'report'); // Add type state
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -24,11 +26,13 @@ export default function ReportForm({ initialReport }: ReportFormProps) {
     if (initialReport) {
       setTitle(initialReport.title);
       setContent(initialReport.content);
+      setType(initialReport.type); // Set type from initialReport
     } else {
       setTitle('');
       setContent('');
+      setType(initialType || 'report'); // Reset type for new report
     }
-  }, [initialReport]);
+  }, [initialReport, initialType]); // Add initialType to dependency array
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -46,7 +50,7 @@ export default function ReportForm({ initialReport }: ReportFormProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ title, content, type }),
       })
 
       if (!response.ok) {
@@ -61,7 +65,7 @@ export default function ReportForm({ initialReport }: ReportFormProps) {
         setContent('')
       }
       console.log('Report operation successful:', result)
-      router.push('/reports');
+      router.push(type === 'report' ? '/reports' : '/trends');
     } catch (err: unknown) {
       let errorMessage = '予期せぬエラーが発生しました。';
       if (err instanceof Error) {
@@ -79,6 +83,39 @@ export default function ReportForm({ initialReport }: ReportFormProps) {
       {/* Left Column: Input Form */}
       <form onSubmit={handleSubmit} className="flex-1 space-y-6">
         <h1 className="text-3xl font-bold text-center mb-6">{initialReport ? 'レポート編集' : '新規レポート作成'}</h1>
+
+        {/* Type Selection */}
+        <div className="mb-4">
+          <Label>投稿タイプ</Label>
+          <div className="flex space-x-4 mt-2">
+            <div className="flex items-center">
+              <input
+                type="radio"
+                id="typeReport"
+                name="reportType"
+                value="report"
+                checked={type === 'report'}
+                onChange={() => setType('report')}
+                className="mr-2"
+                disabled={isSubmitting}
+              />
+              <Label htmlFor="typeReport">レポート</Label>
+            </div>
+            <div className="flex items-center">
+              <input
+                type="radio"
+                id="typeTrend"
+                name="reportType"
+                value="trend"
+                checked={type === 'trend'}
+                onChange={() => setType('trend')}
+                className="mr-2"
+                disabled={isSubmitting}
+              />
+              <Label htmlFor="typeTrend">トレンド</Label>
+            </div>
+          </div>
+        </div>
 
         {error && <p className="text-red-500 text-center">{error}</p>}
         {success && <p className="text-green-500 text-center">{success}</p>}

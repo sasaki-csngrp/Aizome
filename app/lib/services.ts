@@ -1,9 +1,9 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // Assuming authOptions are exported here
-import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById } from "./db";
+import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb } from "./db";
 import { NewReport, Report } from "./models";
 
-export async function createReport(title: string, content: string): Promise<Report> {
+export async function createReport(title: string, content: string, type: 'report' | 'trend'): Promise<Report> {
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user || !session.user.id) {
@@ -14,6 +14,7 @@ export async function createReport(title: string, content: string): Promise<Repo
     author_id: session.user.id, // Assuming session.user.id exists and is the author_id
     title,
     content,
+    type, // Add type
   };
 
   const report = await insertReport(newReport);
@@ -27,6 +28,16 @@ export async function getAllReports(): Promise<Report[]> {
   } catch (error) {
     console.error('Error fetching reports:', error);
     throw new Error('Failed to fetch reports.');
+  }
+}
+
+export async function getTrends(): Promise<Report[]> {
+  try {
+    const trends = await getTrendsFromDb();
+    return trends;
+  } catch (error) {
+    console.error('Error fetching trends:', error);
+    throw new Error('Failed to fetch trends.');
   }
 }
 

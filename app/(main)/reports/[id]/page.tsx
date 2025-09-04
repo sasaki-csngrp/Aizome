@@ -35,8 +35,8 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
           </h1>
           <div className="mt-3 text-sm text-gray-500 flex space-x-4">
             <p>投稿者: {report.authorname || 'Unknown'}</p>
-            <p>投稿日: {formatDate(report.created_at)}</p>
-            <p>更新日: {formatDate(report.updated_at)}</p>
+            <p>投稿日: {formatDate(report.createdAt)}</p>
+            <p>更新日: {formatDate(report.updatedAt)}</p>
           </div>
         </div>
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">
