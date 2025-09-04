@@ -14,9 +14,47 @@ export interface Report {
 export type NewReport = Omit<Report, 'id' | 'createdAt' | 'updatedAt'>;
 */
 
+export interface Report {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  type: 'report' | 'trend';
+  authorname?: string;
+  author_id?: string; // Add author_id
+}
+
+/*
+export type NewReport = Omit<Report, 'id' | 'createdAt' | 'updatedPated'>;
+*/
+
 export interface NewReport {
   author_id: string;
   title: string;
   content: string;
   type: 'report' | 'trend';
 }
+
+export interface User {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  emailVerified?: Date | null;
+  image?: string | null;
+  hashedPassword?: string | null;
+  nickname?: string | null;
+  bio?: string | null;
+  total_points?: number;
+  avatar_id?: number | null;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+export interface Avatar {
+  id: number;
+  name: string;
+  image_url: string;
+}
+

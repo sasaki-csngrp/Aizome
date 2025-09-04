@@ -1,6 +1,6 @@
 import { sql } from '@vercel/postgres';
 import { unstable_noStore as noStore } from 'next/cache';
-import { NewReport, Report } from './models';
+import { NewReport, Report, User, Avatar } from './models';
 
 export async function insertReport(report: NewReport): Promise<Report> {
   try {
@@ -120,5 +120,92 @@ export async function updateReportInDb(report: Report): Promise<Report> {
   } catch (error) {
     console.error('Error updating report in DB:', error);
     throw new Error('Failed to update report in database.');
+  }
+}
+
+export async function getAvatarsFromDb(): Promise<Avatar[]> {
+  noStore(); // Prevent caching
+  try {
+    const { rows } = await sql<Avatar>`
+      SELECT id, name, image_url FROM avatars ORDER BY id ASC;
+    `;
+    return rows;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch avatars.');
+  }
+}
+
+export async function getUserByIdFromDb(id: string): Promise<User | null> {
+  noStore(); // Prevent caching
+  try {
+    const { rows } = await sql<User>`
+      SELECT
+        id,
+        name,
+        email,
+        "emailVerified",
+        image,
+        "hashedPassword",
+        nickname,
+        bio,
+        total_points,
+        avatar_id,
+        created_at,
+        updated_at
+      FROM users
+      WHERE id = ${id};
+    `;
+    return rows.length > 0 ? rows[0] : null;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch user by ID.');
+  }
+}
+
+export async function updateUserInDb(id: string, data: Partial<User>): Promise<User> {
+  noStore(); // Prevent caching
+  try {
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (data.nickname !== undefined) {
+      updates.push(`nickname = $${paramIndex++}`);
+      values.push(data.nickname);
+    }
+    if (data.bio !== undefined) {
+      updates.push(`bio = $${paramIndex++}`);
+      values.push(data.bio);
+    }
+    if (data.avatar_id !== undefined) {
+      updates.push(`avatar_id = $${paramIndex++}`);
+      values.push(data.avatar_id);
+    }
+    updates.push(`updated_at = NOW()`);
+
+    if (updates.length === 0) {
+      throw new Error("No fields to update.");
+    }
+
+    const query = `
+      UPDATE users
+      SET ${updates.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING id, name, email, "emailVerified", image, "hashedPassword", nickname, bio, total_points, avatar_id, created_at, updated_at;
+    `;
+
+    values.push(id); // Add id as the last parameter
+
+    const result = await sql.query<User>(query, values);
+
+    if (result.rows.length > 0) {
+      return result.rows[0];
+    } else {
+      throw new Error('Failed to update user: No rows returned.');
+    }
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to update user in database.');
   }
 }

@@ -1,7 +1,7 @@
+import { NewReport, Report, User, Avatar } from "./models";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // Assuming authOptions are exported here
-import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb } from "./db";
-import { NewReport, Report } from "./models";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb } from "./db";
 
 export async function createReport(title: string, content: string, type: 'report' | 'trend'): Promise<Report> {
   const session = await getServerSession(authOptions);
@@ -90,5 +90,41 @@ export async function deleteReport(id: string): Promise<{ message: string }> {
   } catch (error) {
     console.error('Error deleting report:', error);
     throw new Error('Failed to delete report.');
+  }
+}
+
+export async function getAvatars(): Promise<Avatar[]> {
+  try {
+    const avatars = await getAvatarsFromDb();
+    return avatars;
+  } catch (error) {
+    console.error('Error fetching avatars:', error);
+    throw new Error('Failed to fetch avatars.');
+  }
+}
+
+export async function getUserById(id: string): Promise<User | null> {
+  try {
+    const user = await getUserByIdFromDb(id);
+    return user;
+  } catch (error) {
+    console.error('Error fetching user by ID:', error);
+    throw new Error('Failed to fetch user by ID.');
+  }
+}
+
+export async function updateUser(id: string, data: { nickname?: string | null; bio?: string | null; avatar_id?: number | null; }): Promise<User> {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user || session.user.id !== id) {
+    throw new Error("User not authenticated or unauthorized.");
+  }
+
+  try {
+    const updatedUser = await updateUserInDb(id, data);
+    return updatedUser;
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw new Error('Failed to update user.');
   }
 }

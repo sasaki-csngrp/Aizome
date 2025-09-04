@@ -6,7 +6,11 @@ declare module "next-auth" {
    */
   interface Session {
     user: {
-      id: string; // Add id to the user object in the session
+      id: string;
+      nickname: string | null;
+      bio: string | null;
+      total_points: number | null;
+      image: string | null;
     } & DefaultSession["user"];
   }
 
@@ -15,7 +19,11 @@ declare module "next-auth" {
    * or the second parameter of the `session` callback, when using a database.
    */
   interface User extends DefaultUser {
-    id: string; // Add id to the user object
+    id: string;
+    nickname: string | null;
+    bio: string | null;
+    total_points: number | null;
+    avatar_id: number | null;
   }
 }
 
@@ -24,6 +32,11 @@ declare module "next-auth/jwt" {
    * Returned by the `jwt` callback and `getToken`, when using JWT sessions
    */
   interface JWT {
-    id: string; // Add id to the JWT token
+    id: string;
+    nickname: string | null;
+    bio: string | null;
+    total_points: number | null;
+    avatar_id: number | null;
+    picture: string | null;
   }
 }

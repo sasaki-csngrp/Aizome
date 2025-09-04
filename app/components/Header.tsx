@@ -6,6 +6,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -50,7 +58,7 @@ export default function Header() {
               <span className="text-lg font-semibold text-gray-800">Aizome</span>
             </Link>
             <div className="hidden md:block text-gray-600">
-              {user ? `ようこそ ${user.name} さん` : ""}
+              {user ? `ようこそ ${user.nickname || user.name} さん` : ""}
             </div>
           </div>
 
@@ -65,15 +73,35 @@ export default function Header() {
             <Link href="/trends" className="text-gray-600 hover:text-gray-800">
               トレンド
             </Link>
-            <Button onClick={() => signOut({ callbackUrl: '/' })} variant="ghost" size="sm">
-              ログアウト
-            </Button>
-            <Avatar>
-              <AvatarImage src={user?.image || undefined} />
-              <AvatarFallback>
-                {user?.name?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={user?.image || undefined} alt="@shadcn" />
+                    <AvatarFallback>{user?.nickname?.charAt(0) || user?.name?.charAt(0) || "U"}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user?.nickname || user?.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">
+                    プロフィール
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>
+                  ログアウト
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           {/* Mobile Menu (Hamburger) */}
@@ -94,11 +122,11 @@ export default function Header() {
                     <Avatar className="mx-auto">
                       <AvatarImage src={user?.image || undefined} />
                       <AvatarFallback>
-                        {user?.name?.charAt(0) || "U"}
+                        {user?.nickname?.charAt(0) || user?.name?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
                     <p className="text-center mt-2">
-                      {user ? `ようこそ ${user.name} さん` : ""}
+                      {user ? `ようこそ ${user.nickname || user.name} さん` : ""}
                     </p>
                   </div>
                   <nav className="flex flex-col space-y-2">{menuItems}</nav>
