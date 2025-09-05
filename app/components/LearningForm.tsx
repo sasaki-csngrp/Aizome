@@ -237,7 +237,7 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
       {/* Right Column: Real-time Preview */}
       <div className="flex-1 bg-gray-50 p-6 rounded-md border border-gray-200 flex flex-col">
         <h2 className="text-2xl font-semibold mb-4">プレビュー</h2>
-        <div className="overflow-y-auto h-96 pr-4 space-y-4">
+        <div className="overflow-y-auto h-198 pr-4 space-y-4">
           <div>
             <h3 className="text-xl font-bold mb-2">{title || 'タイトルがここに入力されます'}</h3>
             <div className="text-sm text-gray-600 mb-2">
