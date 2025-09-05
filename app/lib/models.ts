@@ -6,24 +6,9 @@ export interface Report {
   updatedAt: Date;
   userId: string;
   type: 'report' | 'trend';
+  author_id?: string;
   authorname?: string;
-  author_id?: string; // Add author_id
-}
-
-/*
-export type NewReport = Omit<Report, 'id' | 'createdAt' | 'updatedAt'>;
-*/
-
-export interface Report {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string;
-  type: 'report' | 'trend';
-  authorname?: string;
-  author_id?: string; // Add author_id
+  authorImage?: string;
 }
 
 /*

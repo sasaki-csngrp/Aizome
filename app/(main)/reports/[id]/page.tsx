@@ -2,6 +2,8 @@ import { getReportById } from "@/app/lib/services";
 import { notFound } from "next/navigation";
 import MarkdownRenderer from "@/app/components/MarkdownRenderer";
 import Link from "next/link";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { formatDateToYYYYMMDD } from "@/app/lib/utils";
 
 export default async function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -11,17 +13,6 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
     notFound();
   }
 
-  const formatDate = (dateString: string | Date) => {
-    if (!dateString) return 'N/A';
-    // JST (GMT+9) に変換し、指定のフォーマットで表示
-    return new Date(dateString).toLocaleString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      timeZone: 'Asia/Tokyo'
-    }).replace(',', ''); // "YYYY/MM/DD, HH:mm:ss" のカンマを削除
-  };
-
   return (
     <main className="container mx-auto px-2 py-12 sm:px-6 lg:px-8">
       <div className="w-full mx-auto">
@@ -29,10 +20,17 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
           <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
             {report.title}
           </h1>
-          <div className="mt-3 text-sm text-gray-500 flex space-x-4">
-            <p>投稿者: {report.authorname || 'Unknown'}</p>
-            <p>投稿日: {formatDate(report.createdAt)}</p>
-            <p>更新日: {formatDate(report.updatedAt)}</p>
+          <div className="mt-3 text-sm text-gray-500 flex items-center space-x-4">
+            <Link href={`/users/${report.author_id}`} className="flex items-center space-x-2 hover:underline">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={report.authorImage || ''} alt={report.authorname || 'Avatar'} />
+                <AvatarFallback>{report.authorname?.charAt(0) || 'A'}</AvatarFallback>
+              </Avatar>
+              <span className="font-medium">{report.authorname || 'Unknown'}</span>
+            </Link>
+            <span className="text-gray-300">|</span>
+            <p>投稿日: {formatDateToYYYYMMDD(report.createdAt)}</p>
+            <p>更新日: {formatDateToYYYYMMDD(report.updatedAt)}</p>
           </div>
         </div>
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">

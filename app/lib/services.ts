@@ -1,7 +1,7 @@
 import { NewReport, Report, User, Avatar } from "./models";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb } from "./db";
+import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb, getReportsByUserIdFromDb } from "./db";
 
 export async function createReport(title: string, content: string, type: 'report' | 'trend'): Promise<Report> {
   const session = await getServerSession(authOptions);
@@ -126,5 +126,15 @@ export async function updateUser(id: string, data: { nickname?: string | null; b
   } catch (error) {
     console.error('Error updating user:', error);
     throw new Error('Failed to update user.');
+  }
+}
+
+export async function getReportsByUserId(userId: string): Promise<Report[]> {
+  try {
+    const reports = await getReportsByUserIdFromDb(userId);
+    return reports;
+  } catch (error) {
+    console.error('Error fetching reports by user:', error);
+    throw new Error('Failed to fetch reports by user.');
   }
 }

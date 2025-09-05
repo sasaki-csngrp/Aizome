@@ -22,7 +22,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">User Profile</h1>
+      <h1 className="text-3xl font-bold mb-6">プロフィール設定</h1>
       <ProfileForm user={user} avatars={avatars} />
     </div>
   );

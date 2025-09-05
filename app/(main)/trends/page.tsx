@@ -4,19 +4,13 @@ import DeleteButton from "@/app/components/DeleteButton";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { formatDateToYYYYMMDD } from "@/app/lib/utils";
 
 export default async function TrendsPage() {
   const trends = await getTrends();
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id;
-
-  const formatDate = (dateString: Date) => {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}/${month}/${day}`;
-  };
 
   const renderContentWithLinks = (content: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -47,11 +41,17 @@ export default async function TrendsPage() {
         {trends.map((trend) => (
           <div key={trend.id} className="border p-4 rounded-lg shadow-md flex flex-col">
             <h2 className="text-xl font-semibold mb-2">{trend.title}</h2>
-            <p className="text-gray-600 text-sm mb-2">投稿者: {trend.authorname || 'Unknown'}</p>
+            <Link href={`/users/${trend.author_id}`} className="flex items-center space-x-2 text-sm text-gray-600 mb-2 hover:underline">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={trend.authorImage || ''} alt={trend.authorname || 'Avatar'} />
+                <AvatarFallback>{trend.authorname?.charAt(0) || 'A'}</AvatarFallback>
+              </Avatar>
+              <span>{trend.authorname || 'Unknown'}</span>
+            </Link>
             <p className="text-gray-700 mb-4 line-clamp-3 flex-grow">{renderContentWithLinks(trend.content)}</p>
             <div className="text-sm text-gray-500 mb-2">
-              <p>投稿日: {formatDate(trend.createdAt)}</p>
-              <p>更新日: {formatDate(trend.updatedAt)}</p>
+              <p>投稿日: {formatDateToYYYYMMDD(trend.createdAt)}</p>
+              <p>更新日: {formatDateToYYYYMMDD(trend.updatedAt)}</p>
             </div>
             <div className="flex justify-end items-center mt-auto"> 
               {trend.author_id === currentUserId && (

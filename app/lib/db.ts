@@ -28,7 +28,8 @@ export async function getAllReportsFromDb(): Promise<Report[]> {
       SELECT
         r.id,
         r.author_id,
-        COALESCE(u.name, 'Unknown') as authorname,
+        COALESCE(u.nickname, u.name, 'Unknown') as authorname,
+        COALESCE(a.image_url, u.image) as "authorImage",
         r.title,
         r.content,
         r.created_at as "createdAt",
@@ -36,6 +37,7 @@ export async function getAllReportsFromDb(): Promise<Report[]> {
         r.type
       FROM reports r
       JOIN users u ON r.author_id = u.id
+      LEFT JOIN avatars a ON u.avatar_id = a.id
       WHERE r.type = 'report'
       ORDER BY r.created_at DESC
     `;
@@ -52,7 +54,8 @@ export async function getTrendsFromDb(): Promise<Report[]> {
       SELECT
         r.id,
         r.author_id,
-        COALESCE(u.name, 'Unknown') as authorname,
+        COALESCE(u.nickname, u.name, 'Unknown') as authorname,
+        COALESCE(a.image_url, u.image) as "authorImage",
         r.title,
         r.content,
         r.created_at as "createdAt",
@@ -60,6 +63,7 @@ export async function getTrendsFromDb(): Promise<Report[]> {
         r.type
       FROM reports r
       JOIN users u ON r.author_id = u.id
+      LEFT JOIN avatars a ON u.avatar_id = a.id
       WHERE r.type = 'trend'
       ORDER BY r.created_at DESC
     `;
@@ -87,7 +91,8 @@ export async function getReportByIdFromDb(id: string): Promise<Report | null> {
       SELECT
         r.id,
         r.author_id,
-        COALESCE(u.name, 'Unknown') as authorname,
+        COALESCE(u.nickname, u.name, 'Unknown') as authorname,
+        COALESCE(a.image_url, u.image) as "authorImage",
         r.title,
         r.content,
         r.created_at as "createdAt",
@@ -95,6 +100,7 @@ export async function getReportByIdFromDb(id: string): Promise<Report | null> {
         r.type
       FROM reports r
       JOIN users u ON r.author_id = u.id
+      LEFT JOIN avatars a ON u.avatar_id = a.id
       WHERE r.id = ${id}
     `;
     return rows.length > 0 ? rows[0] : null;
@@ -182,20 +188,25 @@ export async function updateUserInDb(id: string, data: Partial<User>): Promise<U
       updates.push(`avatar_id = $${paramIndex++}`);
       values.push(data.avatar_id);
     }
-    updates.push(`updated_at = NOW()`);
 
     if (updates.length === 0) {
-      throw new Error("No fields to update.");
+      // 更新するフィールドがない場合は、データベースにアクセスせずにユーザー情報を返します。
+      const user = await getUserByIdFromDb(id);
+      if (!user) throw new Error("User not found after attempting an empty update.");
+      return user;
     }
+
+    updates.push(`updated_at = NOW()`);
 
     const query = `
       UPDATE users
       SET ${updates.join(', ')}
       WHERE id = $${paramIndex}
-      RETURNING id, name, email, "emailVerified", image, "hashedPassword", nickname, bio, total_points, avatar_id, created_at, updated_at;
+      RETURNING id, name, email, "emailVerified", image, "hashedPassword", nickname, bio,
+total_points, avatar_id, created_at, updated_at;
     `;
 
-    values.push(id); // Add id as the last parameter
+    values.push(id);
 
     const result = await sql.query<User>(query, values);
 
@@ -207,5 +218,31 @@ export async function updateUserInDb(id: string, data: Partial<User>): Promise<U
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to update user in database.');
+  }
+}
+
+export async function getReportsByUserIdFromDb(userId: string): Promise<Report[]> {
+  try {
+    const { rows } = await sql<Report>`
+      SELECT
+        r.id,
+        r.author_id,
+        COALESCE(u.nickname, u.name, 'Unknown') as authorname,
+        COALESCE(a.image_url, u.image) as "authorImage",
+        r.title,
+        r.content,
+        r.created_at as "createdAt",
+        r.updated_at as "updatedAt",
+        r.type
+      FROM reports r
+      JOIN users u ON r.author_id = u.id
+      LEFT JOIN avatars a ON u.avatar_id = a.id
+      WHERE r.author_id = ${userId} AND r.type = 'report'
+      ORDER BY r.created_at DESC
+    `;
+    return rows;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch reports by user.');
   }
 }

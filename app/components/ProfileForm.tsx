@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Avatar as UIAvatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { updateUserProfile } from "@/app/(main)/profile/actions";
-import { useSession } from "next-auth/react";
 
 interface ProfileFormProps {
   user: User;
@@ -17,11 +16,10 @@ interface ProfileFormProps {
 }
 
 export default function ProfileForm({ user, avatars }: ProfileFormProps) {
-  const { update } = useSession();
   const [nickname, setNickname] = useState(user.nickname || "");
   const [bio, setBio] = useState(user.bio || "");
   const [selectedAvatarId, setSelectedAvatarId] = useState<string>(
-    user.avatar_id?.toString() || "1" // Default to avatar_id 1 if not set
+    user.avatar_id?.toString() || "1"
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -38,28 +36,22 @@ export default function ProfileForm({ user, avatars }: ProfileFormProps) {
     setMessage(null);
 
     if (!nickname.trim()) {
-      setMessage("Nickname is required.");
+      setMessage("ニックネームは必須です。");
       setIsSubmitting(false);
       return;
     }
 
     try {
-      const updatedUser = await updateUserProfile(
+      await updateUserProfile(
         user.id,
         nickname,
         bio,
         parseInt(selectedAvatarId)
       );
-      setMessage("Profile updated successfully!");
-      // Update the session to reflect the new user data
-      await update({
-        nickname: updatedUser.nickname,
-        bio: updatedUser.bio,
-        image: updatedUser.image, // Assuming image is returned from update
-      });
+      setMessage("プロフィールが正常に更新されました。");
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-      setMessage(`Error updating profile: ${errorMessage}`);
+      const errorMessage = error instanceof Error ? error.message : "不明なエラーが発生しました。";
+      setMessage(`プロフィールの更新中にエラーが発生しました: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -73,7 +65,7 @@ export default function ProfileForm({ user, avatars }: ProfileFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-md">
       {message && (
         <div
-          className={`p-3 rounded-md ${message.includes("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
+          className={`p-3 rounded-md ${message.includes("エラー") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
         >
           {message}
         </div>
@@ -85,13 +77,13 @@ export default function ProfileForm({ user, avatars }: ProfileFormProps) {
           <AvatarFallback>{nickname ? nickname[0] : "?"}</AvatarFallback>
         </UIAvatar>
         <div>
-          <h2 className="text-2xl font-semibold">{nickname || "No Nickname"}</h2>
-          <p className="text-gray-500">Total Points: {user.total_points || 0}</p>
+          <h2 className="text-2xl font-semibold">{nickname || "ニックネーム未設定"}</h2>
+          <p className="text-gray-500">合計ポイント: {user.total_points || 0}</p>
         </div>
       </div>
 
       <div>
-        <Label htmlFor="nickname">Nickname</Label>
+        <Label htmlFor="nickname">ニックネーム</Label>
         <Input
           id="nickname"
           type="text"
@@ -102,7 +94,7 @@ export default function ProfileForm({ user, avatars }: ProfileFormProps) {
       </div>
 
       <div>
-        <Label htmlFor="bio">Bio</Label>
+        <Label htmlFor="bio">自己紹介</Label>
         <Textarea
           id="bio"
           value={bio}
@@ -112,16 +104,16 @@ export default function ProfileForm({ user, avatars }: ProfileFormProps) {
       </div>
 
       <div>
-        <Label>Select Avatar</Label>
+        <Label>アバターを選択</Label>
         <RadioGroup
           value={selectedAvatarId}
           onValueChange={setSelectedAvatarId}
-          className="grid grid-cols-3 gap-4 mt-2"
+          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 mt-2"
         >
           {avatars.map((avatar) => (
             <div
               key={avatar.id}
-              className="flex flex-col items-center justify-center space-y-2 p-4 border rounded-md cursor-pointer hover:bg-gray-50"
+              className="flex flex-col items-center justify-center space-y-2 p-2 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
             >
               <RadioGroupItem value={avatar.id.toString()} id={`avatar-${avatar.id}`} className="sr-only" />
               <label htmlFor={`avatar-${avatar.id}`} className="flex flex-col items-center cursor-pointer">
@@ -135,10 +127,13 @@ export default function ProfileForm({ user, avatars }: ProfileFormProps) {
           ))}
         </RadioGroup>
       </div>
-
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Saving..." : "Save Profile"}
-      </Button>
+      
+      <div className="pt-4">
+        <p className="text-sm text-center text-gray-500 mb-2">変更内容は次回ログイン時から反映されます。</p>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "保存中..." : "プロフィールを保存"}
+        </Button>
+      </div>
     </form>
   );
 }
