@@ -1,7 +1,7 @@
-import { NewReport, Report, User, Avatar } from "./models";
+import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent } from "./models";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb, getReportsByUserIdFromDb, addLikeToDb, removeLikeFromDb, isReportLikedByUserFromDb, getLikeCountFromDb } from "./db";
+import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb, getReportsByUserIdFromDb, addLikeToDb, removeLikeFromDb, isReportLikedByUserFromDb, getLikeCountFromDb, insertLearningContent, getAllLearningContentsFromDb, getLearningContentByIdFromDb, updateLearningContentInDb, deleteLearningContentById } from "./db";
 
 export async function createReport(title: string, content: string, type: 'report' | 'trend'): Promise<Report> {
   const session = await getServerSession(authOptions);
@@ -172,4 +172,88 @@ export async function toggleLike(reportId: string): Promise<{ liked: boolean; li
   }
   const likeCount = await getLikeCountFromDb(reportId);
   return { liked: !currentlyLiked, likeCount };
+}
+
+// Learning Content Services
+export async function createLearningContent(title: string, content: string, question: string, answer: string, difficulty: number, prerequisite_content_id?: string | null): Promise<LearningContent> {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("User not authenticated.");
+  }
+
+  const newLearningContent: NewLearningContent = {
+    author_id: session.user.id,
+    title,
+    content,
+    question,
+    answer,
+    difficulty,
+    prerequisite_content_id,
+  };
+
+  const learningContent = await insertLearningContent(newLearningContent);
+  return learningContent;
+}
+
+export async function getAllLearningContents(): Promise<LearningContent[]> {
+  try {
+    const learningContents = await getAllLearningContentsFromDb();
+    return learningContents;
+  } catch (error) {
+    console.error('Error fetching learning contents:', error);
+    throw new Error('Failed to fetch learning contents.');
+  }
+}
+
+export async function getLearningContentById(id: string): Promise<LearningContent | null> {
+  try {
+    const learningContent = await getLearningContentByIdFromDb(id);
+    return learningContent;
+  } catch (error) {
+    console.error('Error fetching learning content by ID:', error);
+    throw new Error('Failed to fetch learning content by ID.');
+  }
+}
+
+export async function updateLearningContent(learningContent: LearningContent): Promise<LearningContent> {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("User not authenticated.");
+  }
+
+  const existingLearningContent = await getLearningContentByIdFromDb(learningContent.id);
+  if (!existingLearningContent || existingLearningContent.author_id !== session.user.id) {
+    throw new Error("Unauthorized to update this learning content.");
+  }
+
+  try {
+    const updatedLearningContent = await updateLearningContentInDb(learningContent);
+    return updatedLearningContent;
+  } catch (error) {
+    console.error('Error updating learning content:', error);
+    throw new Error('Failed to update learning content.');
+  }
+}
+
+export async function deleteLearningContent(id: string): Promise<{ message: string }> {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("User not authenticated.");
+  }
+
+  const existingLearningContent = await getLearningContentByIdFromDb(id);
+  if (!existingLearningContent || existingLearningContent.author_id !== session.user.id) {
+    throw new Error("Unauthorized to delete this learning content or learning content not found.");
+  }
+
+  try {
+    await deleteLearningContentById(id);
+    return { message: 'Learning content deleted successfully.' };
+  } catch (error) {
+    console.error('Error deleting learning content:', error);
+    throw new Error('Failed to delete learning content.');
+  }
 }

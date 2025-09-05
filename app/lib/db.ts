@@ -1,6 +1,6 @@
 import { sql } from '@vercel/postgres';
 import { unstable_noStore as noStore } from 'next/cache';
-import { NewReport, Report, User, Avatar } from './models';
+import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent } from './models';
 
 export async function insertReport(report: NewReport): Promise<Report> {
   try {
@@ -292,5 +292,112 @@ export async function removeLikeFromDb(reportId: string, userId: string): Promis
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to remove like.');
+  }
+}
+
+// Learning Content Database Functions
+export async function insertLearningContent(learningContent: NewLearningContent): Promise<LearningContent> {
+  try {
+    const result = await sql<LearningContent>`
+      INSERT INTO learning_contents (author_id, title, content, question, answer, difficulty, prerequisite_content_id)
+      VALUES (${learningContent.author_id}, ${learningContent.title}, ${learningContent.content}, ${learningContent.question}, ${learningContent.answer}, ${learningContent.difficulty}, ${learningContent.prerequisite_content_id})
+      RETURNING id, author_id, title, content, question, answer, difficulty, prerequisite_content_id, is_public, created_at, updated_at;
+    `;
+    if (result.rows.length > 0) {
+      return result.rows[0];
+    } else {
+      throw new Error('Failed to insert learning content: No rows returned.');
+    }
+  } catch (error) {
+    console.error('Error inserting learning content:', error);
+    throw new Error('Failed to insert learning content into database.');
+  }
+}
+
+export async function getAllLearningContentsFromDb(): Promise<LearningContent[]> {
+  try {
+    const { rows } = await sql<LearningContent>`
+      SELECT
+        lc.id,
+        lc.author_id,
+        COALESCE(u.nickname, u.name, 'Unknown') as authorname,
+        COALESCE(a.image_url, u.image) as "authorImage",
+        lc.title,
+        lc.content,
+        lc.question,
+        lc.answer,
+        lc.difficulty,
+        lc.prerequisite_content_id,
+        lc.is_public,
+        lc.created_at,
+        lc.updated_at
+      FROM learning_contents lc
+      JOIN users u ON lc.author_id = u.id
+      LEFT JOIN avatars a ON u.avatar_id = a.id
+      ORDER BY lc.created_at DESC
+    `;
+    return rows;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch learning contents.');
+  }
+}
+
+export async function getLearningContentByIdFromDb(id: string): Promise<LearningContent | null> {
+  try {
+    const { rows } = await sql<LearningContent>`
+      SELECT
+        lc.id,
+        lc.author_id,
+        COALESCE(u.nickname, u.name, 'Unknown') as authorname,
+        COALESCE(a.image_url, u.image) as "authorImage",
+        lc.title,
+        lc.content,
+        lc.question,
+        lc.answer,
+        lc.difficulty,
+        lc.prerequisite_content_id,
+        lc.is_public,
+        lc.created_at,
+        lc.updated_at
+      FROM learning_contents lc
+      JOIN users u ON lc.author_id = u.id
+      LEFT JOIN avatars a ON u.avatar_id = a.id
+      WHERE lc.id = ${id}
+    `;
+    return rows.length > 0 ? rows[0] : null;
+  } catch (error) {
+    console.error('Error fetching learning content by ID from DB:', error);
+    throw new Error('Failed to fetch learning content by ID from database.');
+  }
+}
+
+export async function updateLearningContentInDb(learningContent: LearningContent): Promise<LearningContent> {
+  try {
+    const result = await sql<LearningContent>`
+      UPDATE learning_contents
+      SET title = ${learningContent.title}, content = ${learningContent.content}, question = ${learningContent.question}, answer = ${learningContent.answer}, difficulty = ${learningContent.difficulty}, prerequisite_content_id = ${learningContent.prerequisite_content_id}, updated_at = NOW()
+      WHERE id = ${learningContent.id}
+      RETURNING id, author_id, title, content, question, answer, difficulty, prerequisite_content_id, is_public, created_at, updated_at;
+    `;
+    if (result.rows.length > 0) {
+      return result.rows[0];
+    } else {
+      throw new Error('Failed to update learning content: No rows returned.');
+    }
+  } catch (error) {
+    console.error('Error updating learning content in DB:', error);
+    throw new Error('Failed to update learning content in database.');
+  }
+}
+
+export async function deleteLearningContentById(id: string) {
+  noStore();
+  try {
+    await sql`DELETE FROM learning_contents WHERE id = ${id}`;
+    return { message: 'Learning content deleted successfully.' };
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to delete learning content.');
   }
 }

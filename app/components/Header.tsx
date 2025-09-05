@@ -37,6 +37,11 @@ export default function Header() {
         </Link>
       </SheetClose>
       <SheetClose asChild>
+        <Link href="/learning-contents" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          学習コンテンツ管理
+        </Link>
+      </SheetClose>
+      <SheetClose asChild>
         <Button
           onClick={() => signOut({ callbackUrl: '/' })}
           className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -72,6 +77,9 @@ export default function Header() {
             </Link>
             <Link href="/trends" className="text-gray-600 hover:text-gray-800">
               トレンド
+            </Link>
+            <Link href="/learning-contents" className="text-gray-600 hover:text-gray-800">
+              学習コンテンツ管理
             </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

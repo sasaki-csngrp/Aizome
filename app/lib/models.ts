@@ -52,3 +52,29 @@ export interface Like {
   created_at: Date;
 }
 
+export interface LearningContent {
+  id: string;
+  title: string;
+  content: string;
+  question: string;
+  answer: string;
+  difficulty: number;
+  prerequisite_content_id?: string | null;
+  is_public: boolean;
+  author_id: string;
+  created_at: Date;
+  updated_at: Date;
+  authorname?: string;
+  authorImage?: string;
+}
+
+export interface NewLearningContent {
+  author_id: string;
+  title: string;
+  content: string;
+  question: string;
+  answer: string;
+  difficulty: number;
+  prerequisite_content_id?: string | null;
+}
+
