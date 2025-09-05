@@ -6,8 +6,8 @@ export default async function NewReportPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined }; 
 }) {
-  const a = await searchParams
-  const typeParam = a?.type as string | undefined;
+  const resolvedSearchParams = await searchParams;
+  const typeParam = resolvedSearchParams?.type as string | undefined;
   const initialType = typeParam || 'report';
   const finalInitialType: 'report' | 'trend' = (initialType === 'report' || initialType === 'trend') ? initialType : 'report';
 
