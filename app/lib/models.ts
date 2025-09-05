@@ -9,6 +9,8 @@ export interface Report {
   author_id?: string;
   authorname?: string;
   authorImage?: string;
+  likeCount?: number;
+  likedByCurrentUser?: boolean;
 }
 
 /*
@@ -41,5 +43,12 @@ export interface Avatar {
   id: number;
   name: string;
   image_url: string;
+}
+
+export interface Like {
+  id: string;
+  user_id: string;
+  report_id: string;
+  created_at: Date;
 }
 

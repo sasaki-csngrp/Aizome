@@ -1,6 +1,8 @@
 import { getReportById } from "@/app/lib/services";
 import { notFound } from "next/navigation";
 import MarkdownRenderer from "@/app/components/MarkdownRenderer";
+import LikeButton from "@/app/components/LikeButton";
+import { isReportLikedByCurrentUser } from "@/app/lib/services";
 import Link from "next/link";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { formatDateToYYYYMMDD } from "@/app/lib/utils";
@@ -8,6 +10,7 @@ import { formatDateToYYYYMMDD } from "@/app/lib/utils";
 export default async function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const report = await getReportById(id);
+  const liked = await isReportLikedByCurrentUser(id);
 
   if (!report) {
     notFound();
@@ -37,6 +40,9 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ i
           <div className="px-4 py-5 sm:p-6">
             <MarkdownRenderer content={report.content} />
           </div>
+        </div>
+        <div className="mt-6">
+          <LikeButton reportId={report.id} initialLiked={liked} initialLikeCount={report.likeCount ?? 0} />
         </div>
         <div className="mt-8">
             <Link href="/reports" className="text-indigo-600 hover:text-indigo-900">

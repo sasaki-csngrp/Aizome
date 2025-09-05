@@ -1,7 +1,7 @@
 import { NewReport, Report, User, Avatar } from "./models";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb, getReportsByUserIdFromDb } from "./db";
+import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb, getReportsByUserIdFromDb, addLikeToDb, removeLikeFromDb, isReportLikedByUserFromDb, getLikeCountFromDb } from "./db";
 
 export async function createReport(title: string, content: string, type: 'report' | 'trend'): Promise<Report> {
   const session = await getServerSession(authOptions);
@@ -137,4 +137,39 @@ export async function getReportsByUserId(userId: string): Promise<Report[]> {
     console.error('Error fetching reports by user:', error);
     throw new Error('Failed to fetch reports by user.');
   }
+}
+
+export async function isReportLikedByCurrentUser(reportId: string): Promise<boolean> {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.id) return false;
+  return isReportLikedByUserFromDb(reportId, session.user.id);
+}
+
+export async function likeReport(reportId: string): Promise<{ likeCount: number }> {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.id) throw new Error("User not authenticated.");
+  await addLikeToDb(reportId, session.user.id);
+  const likeCount = await getLikeCountFromDb(reportId);
+  return { likeCount };
+}
+
+export async function unlikeReport(reportId: string): Promise<{ likeCount: number }> {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.id) throw new Error("User not authenticated.");
+  await removeLikeFromDb(reportId, session.user.id);
+  const likeCount = await getLikeCountFromDb(reportId);
+  return { likeCount };
+}
+
+export async function toggleLike(reportId: string): Promise<{ liked: boolean; likeCount: number }> {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user?.id) throw new Error("User not authenticated.");
+  const currentlyLiked = await isReportLikedByUserFromDb(reportId, session.user.id);
+  if (currentlyLiked) {
+    await removeLikeFromDb(reportId, session.user.id);
+  } else {
+    await addLikeToDb(reportId, session.user.id);
+  }
+  const likeCount = await getLikeCountFromDb(reportId);
+  return { liked: !currentlyLiked, likeCount };
 }

@@ -34,7 +34,8 @@ export async function getAllReportsFromDb(): Promise<Report[]> {
         r.content,
         r.created_at as "createdAt",
         r.updated_at as "updatedAt",
-        r.type
+        r.type,
+        (SELECT COUNT(*)::int FROM likes l WHERE l.report_id = r.id) AS "likeCount"
       FROM reports r
       JOIN users u ON r.author_id = u.id
       LEFT JOIN avatars a ON u.avatar_id = a.id
@@ -60,7 +61,8 @@ export async function getTrendsFromDb(): Promise<Report[]> {
         r.content,
         r.created_at as "createdAt",
         r.updated_at as "updatedAt",
-        r.type
+        r.type,
+        (SELECT COUNT(*)::int FROM likes l WHERE l.report_id = r.id) AS "likeCount"
       FROM reports r
       JOIN users u ON r.author_id = u.id
       LEFT JOIN avatars a ON u.avatar_id = a.id
@@ -97,7 +99,8 @@ export async function getReportByIdFromDb(id: string): Promise<Report | null> {
         r.content,
         r.created_at as "createdAt",
         r.updated_at as "updatedAt",
-        r.type
+        r.type,
+        (SELECT COUNT(*)::int FROM likes l WHERE l.report_id = r.id) AS "likeCount"
       FROM reports r
       JOIN users u ON r.author_id = u.id
       LEFT JOIN avatars a ON u.avatar_id = a.id
@@ -233,7 +236,8 @@ export async function getReportsByUserIdFromDb(userId: string): Promise<Report[]
         r.content,
         r.created_at as "createdAt",
         r.updated_at as "updatedAt",
-        r.type
+        r.type,
+        (SELECT COUNT(*)::int FROM likes l WHERE l.report_id = r.id) AS "likeCount"
       FROM reports r
       JOIN users u ON r.author_id = u.id
       LEFT JOIN avatars a ON u.avatar_id = a.id
@@ -244,5 +248,49 @@ export async function getReportsByUserIdFromDb(userId: string): Promise<Report[]
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch reports by user.');
+  }
+}
+
+export async function getLikeCountFromDb(reportId: string): Promise<number> {
+  try {
+    const { rows } = await sql<{ likeCount: number }>`
+      SELECT COUNT(*)::int as "likeCount" FROM likes WHERE report_id = ${reportId}
+    `;
+    return rows[0]?.likeCount ?? 0;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch like count.');
+  }
+}
+
+export async function isReportLikedByUserFromDb(reportId: string, userId: string): Promise<boolean> {
+  try {
+    const { rows } = await sql<{ exists: boolean }>`
+      SELECT EXISTS (
+        SELECT 1 FROM likes WHERE report_id = ${reportId} AND user_id = ${userId}
+      ) as exists
+    `;
+    return rows[0]?.exists ?? false;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to check like status.');
+  }
+}
+
+export async function addLikeToDb(reportId: string, userId: string): Promise<void> {
+  try {
+    await sql`INSERT INTO likes (report_id, user_id) VALUES (${reportId}, ${userId}) ON CONFLICT (user_id, report_id) DO NOTHING`;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to add like.');
+  }
+}
+
+export async function removeLikeFromDb(reportId: string, userId: string): Promise<void> {
+  try {
+    await sql`DELETE FROM likes WHERE report_id = ${reportId} AND user_id = ${userId}`;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to remove like.');
   }
 }
