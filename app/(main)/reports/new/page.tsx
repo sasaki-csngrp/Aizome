@@ -4,7 +4,7 @@ import Link from 'next/link';
 export default async function NewReportPage({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined }; 
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>; 
 }) {
   const resolvedSearchParams = await searchParams;
   const typeParam = resolvedSearchParams?.type as string | undefined;

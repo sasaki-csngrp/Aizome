@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import HomeAuth from '@/app/components/HomeAuth';
 import { getServerSession } from 'next-auth';
-import { authOptions } from './api/auth/[...nextauth]/route';
+import { authOptions } from './lib/auth';
 
 export default async function HomePage() {
   const readmePath = path.join(process.cwd(), 'public', 'README.md');

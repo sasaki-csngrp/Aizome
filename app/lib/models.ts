@@ -35,6 +35,7 @@ export interface User {
   bio?: string | null;
   total_points?: number;
   avatar_id?: number | null;
+  role?: 'user' | 'admin';
   created_at?: Date;
   updated_at?: Date;
 }
@@ -66,6 +67,7 @@ export interface LearningContent {
   updated_at: Date;
   authorname?: string;
   authorImage?: string;
+  is_learned?: boolean;
 }
 
 export interface NewLearningContent {
@@ -76,5 +78,12 @@ export interface NewLearningContent {
   answer: string;
   difficulty: number;
   prerequisite_content_id?: string | null;
+  is_public?: boolean;
+}
+
+export interface UserLearnedContent {
+  user_id: string;
+  content_id: string;
+  learned_at: Date;
 }
 

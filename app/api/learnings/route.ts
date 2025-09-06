@@ -3,7 +3,7 @@ import { createLearningContent, getAllLearningContents } from '@/app/lib/service
 
 export async function POST(request: Request) {
   try {
-    const { title, content, question, answer, difficulty, prerequisite_content_id } = await request.json();
+    const { title, content, question, answer, difficulty, prerequisite_content_id, is_public } = await request.json();
 
     if (!title || !content || !question || !answer || !difficulty) {
       return NextResponse.json({ error: 'Title, content, question, answer, and difficulty are required.' }, { status: 400 });
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Difficulty must be between 1 and 3.' }, { status: 400 });
     }
 
-    const learningContent = await createLearningContent(title, content, question, answer, difficulty, prerequisite_content_id);
+    const learningContent = await createLearningContent(title, content, question, answer, difficulty, prerequisite_content_id, is_public);
     return NextResponse.json(learningContent, { status: 201 }); // 201 Created
   } catch (error: unknown) {
     console.error('Error creating learning content:', error);

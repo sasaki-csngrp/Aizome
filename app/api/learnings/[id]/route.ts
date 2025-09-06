@@ -4,7 +4,7 @@ import { updateLearningContent, deleteLearningContent, getLearningContentById } 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const { title, content, question, answer, difficulty, prerequisite_content_id } = await request.json();
+    const { title, content, question, answer, difficulty, prerequisite_content_id, is_public } = await request.json();
 
     if (!title || !content || !question || !answer || !difficulty) {
       return NextResponse.json({ error: 'Title, content, question, answer, and difficulty are required.' }, { status: 400 });
@@ -27,6 +27,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       answer,
       difficulty,
       prerequisite_content_id,
+      is_public,
     });
 
     return NextResponse.json(updatedLearningContent, { status: 200 });

@@ -20,7 +20,7 @@ export default async function EditLearningPage({ params }: EditLearningPageProps
       <div className="w-full mx-auto">
         <LearningForm initialLearningContent={learningContent} />
         <div className="mt-8">
-          <Link href="/learning-contents" className="text-indigo-600 hover:text-indigo-900">
+          <Link href="/learnings" className="text-indigo-600 hover:text-indigo-900">
             &larr; 一覧に戻る
           </Link>
         </div>

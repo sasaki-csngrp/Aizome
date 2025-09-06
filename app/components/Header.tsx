@@ -37,8 +37,8 @@ export default function Header() {
         </Link>
       </SheetClose>
       <SheetClose asChild>
-        <Link href="/learning-contents" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-          学習コンテンツ管理
+        <Link href="/learnings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          {user?.role === 'admin' ? '学習コンテンツ管理' : 'AI学習'}
         </Link>
       </SheetClose>
       <SheetClose asChild>
@@ -78,8 +78,8 @@ export default function Header() {
             <Link href="/trends" className="text-gray-600 hover:text-gray-800">
               トレンド
             </Link>
-            <Link href="/learning-contents" className="text-gray-600 hover:text-gray-800">
-              学習コンテンツ管理
+            <Link href="/learnings" className="text-gray-600 hover:text-gray-800">
+              {user?.role === 'admin' ? '学習コンテンツ管理' : 'AI学習'}
             </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -1,6 +1,6 @@
 import { sql } from '@vercel/postgres';
 import { unstable_noStore as noStore } from 'next/cache';
-import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent } from './models';
+import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent, UserLearnedContent } from './models';
 
 export async function insertReport(report: NewReport): Promise<Report> {
   try {
@@ -299,8 +299,8 @@ export async function removeLikeFromDb(reportId: string, userId: string): Promis
 export async function insertLearningContent(learningContent: NewLearningContent): Promise<LearningContent> {
   try {
     const result = await sql<LearningContent>`
-      INSERT INTO learning_contents (author_id, title, content, question, answer, difficulty, prerequisite_content_id)
-      VALUES (${learningContent.author_id}, ${learningContent.title}, ${learningContent.content}, ${learningContent.question}, ${learningContent.answer}, ${learningContent.difficulty}, ${learningContent.prerequisite_content_id})
+      INSERT INTO learning_contents (author_id, title, content, question, answer, difficulty, prerequisite_content_id, is_public)
+      VALUES (${learningContent.author_id}, ${learningContent.title}, ${learningContent.content}, ${learningContent.question}, ${learningContent.answer}, ${learningContent.difficulty}, ${learningContent.prerequisite_content_id}, ${learningContent.is_public || false})
       RETURNING id, author_id, title, content, question, answer, difficulty, prerequisite_content_id, is_public, created_at, updated_at;
     `;
     if (result.rows.length > 0) {
@@ -376,7 +376,7 @@ export async function updateLearningContentInDb(learningContent: LearningContent
   try {
     const result = await sql<LearningContent>`
       UPDATE learning_contents
-      SET title = ${learningContent.title}, content = ${learningContent.content}, question = ${learningContent.question}, answer = ${learningContent.answer}, difficulty = ${learningContent.difficulty}, prerequisite_content_id = ${learningContent.prerequisite_content_id}, updated_at = NOW()
+      SET title = ${learningContent.title}, content = ${learningContent.content}, question = ${learningContent.question}, answer = ${learningContent.answer}, difficulty = ${learningContent.difficulty}, prerequisite_content_id = ${learningContent.prerequisite_content_id}, is_public = ${learningContent.is_public}, updated_at = NOW()
       WHERE id = ${learningContent.id}
       RETURNING id, author_id, title, content, question, answer, difficulty, prerequisite_content_id, is_public, created_at, updated_at;
     `;
@@ -399,5 +399,72 @@ export async function deleteLearningContentById(id: string) {
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to delete learning content.');
+  }
+}
+
+// User Learning Content Database Functions
+export async function getUserLearnedContentIdsFromDb(userId: string): Promise<string[]> {
+  try {
+    const { rows } = await sql<{ content_id: string }>`
+      SELECT content_id FROM user_learned_contents WHERE user_id = ${userId}
+    `;
+    return rows.map(row => row.content_id);
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch user learned content IDs.');
+  }
+}
+
+export async function insertUserLearnedContentToDb(userId: string, contentId: string): Promise<void> {
+  try {
+    await sql`
+      INSERT INTO user_learned_contents (user_id, content_id) 
+      VALUES (${userId}, ${contentId}) 
+      ON CONFLICT (user_id, content_id) DO NOTHING
+    `;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to insert user learned content.');
+  }
+}
+
+export async function getAvailableLearningContentsFromDb(userId: string): Promise<LearningContent[]> {
+  try {
+    const { rows } = await sql<LearningContent & { is_learned: boolean }>`
+      SELECT
+        lc.id,
+        lc.author_id,
+        COALESCE(u.nickname, u.name, 'Unknown') as authorname,
+        COALESCE(a.image_url, u.image) as "authorImage",
+        lc.title,
+        lc.content,
+        lc.question,
+        lc.answer,
+        lc.difficulty,
+        lc.prerequisite_content_id,
+        lc.is_public,
+        lc.created_at,
+        lc.updated_at,
+        CASE 
+          WHEN ulc.content_id IS NOT NULL THEN true 
+          ELSE false 
+        END as is_learned
+      FROM learning_contents lc
+      JOIN users u ON lc.author_id = u.id
+      LEFT JOIN avatars a ON u.avatar_id = a.id
+      LEFT JOIN user_learned_contents ulc ON lc.id = ulc.content_id AND ulc.user_id = ${userId}
+      WHERE lc.is_public = true
+        AND (
+          lc.prerequisite_content_id IS NULL 
+          OR lc.prerequisite_content_id IN (
+            SELECT content_id FROM user_learned_contents WHERE user_id = ${userId}
+          )
+        )
+      ORDER BY lc.difficulty ASC, lc.created_at ASC
+    `;
+    return rows;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch available learning contents.');
   }
 }

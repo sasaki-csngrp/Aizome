@@ -2,7 +2,7 @@ import { getTrends } from "@/app/lib/services";
 import Link from "next/link";
 import DeleteButton from "@/app/components/DeleteButton";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { formatDateToYYYYMMDD } from "@/app/lib/utils";

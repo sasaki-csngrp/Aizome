@@ -3,6 +3,7 @@
 import { LearningContent } from '@/app/lib/models';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface LearningCardProps {
   learningContent: LearningContent;
@@ -10,8 +11,11 @@ interface LearningCardProps {
 
 export default function LearningCard({ learningContent }: LearningCardProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  
+  const isAdmin = session?.user?.role === 'admin';
 
   const getDifficultyLabel = (level: number) => {
     switch (level) {
@@ -32,7 +36,7 @@ export default function LearningCard({ learningContent }: LearningCardProps) {
   };
 
   const handleEdit = () => {
-    router.push(`/learning-contents/edit/${learningContent.id}`);
+    router.push(`/learnings/edit/${learningContent.id}`);
   };
 
   const handleCopyId = () => {
@@ -54,7 +58,7 @@ export default function LearningCard({ learningContent }: LearningCardProps) {
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/learning-contents/${learningContent.id}`, {
+      const response = await fetch(`/api/learnings/${learningContent.id}`, {
         method: 'DELETE',
       });
 
@@ -73,29 +77,42 @@ export default function LearningCard({ learningContent }: LearningCardProps) {
     }
   };
 
+  const isLearned = learningContent.is_learned;
+  const cardBgClass = isLearned ? "bg-gray-100" : "bg-white";
+  const cardHoverClass = isLearned ? "" : "hover:shadow-lg";
+  
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+    <div className={`${cardBgClass} rounded-lg shadow-md border border-gray-200 p-6 ${cardHoverClass} transition-shadow`}>
       {/* Desktop Layout */}
       <div className="hidden md:flex items-center justify-between">
         <div className="flex-1 flex items-center space-x-6">
           {/* ID and Title */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
+              {/* ID表示は管理者のみ */}
+              {isAdmin && (
+                <button
+                  onClick={handleCopyId}
+                  className="relative group text-xs text-gray-400 font-mono bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
+                  title="クリックしてIDをコピー"
+                >
+                  {learningContent.id.slice(0, 8)}...
+                  {isCopied && (
+                    <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                      コピーしました！
+                    </span>
+                  )}
+                </button>
+              )}
               <button
-                onClick={handleCopyId}
-                className="relative group text-xs text-gray-400 font-mono bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
-                title="クリックしてIDをコピー"
+                onClick={() => router.push(`/learnings/${learningContent.id}`)}
+                className={`text-lg font-semibold truncate hover:text-blue-600 hover:underline text-left ${
+                  isLearned ? 'text-gray-600' : 'text-gray-900'
+                }`}
               >
-                {learningContent.id.slice(0, 8)}...
-                {isCopied && (
-                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                    コピーしました！
-                  </span>
-                )}
-              </button>
-              <h3 className="text-lg font-semibold text-gray-900 truncate">
                 {learningContent.title}
-              </h3>
+                {isLearned && <span className="ml-2 text-sm text-gray-500">(クリア済み)</span>}
+              </button>
             </div>
           </div>
 
@@ -120,30 +137,34 @@ export default function LearningCard({ learningContent }: LearningCardProps) {
             </span>
           </div>
 
-          {/* Prerequisite Content ID */}
-          <div className="min-w-0">
-            <span className="text-sm text-gray-500">
-              {learningContent.prerequisite_content_id ? `前提ID: ${learningContent.prerequisite_content_id.slice(0, 8)}...` : '前提なし'}
-            </span>
-          </div>
+          {/* Prerequisite Content ID - Admin only */}
+          {isAdmin && (
+            <div className="min-w-0">
+              <span className="text-sm text-gray-500">
+                {learningContent.prerequisite_content_id ? `前提ID: ${learningContent.prerequisite_content_id.slice(0, 8)}...` : '前提なし'}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center space-x-2 ml-4">
-          <button
-            onClick={handleEdit}
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            編集
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isDeleting ? '削除中...' : '削除'}
-          </button>
-        </div>
+        {/* Action Buttons - Admin only */}
+        {isAdmin && (
+          <div className="flex items-center space-x-2 ml-4">
+            <button
+              onClick={handleEdit}
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              編集
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isDeleting ? '削除中...' : '削除'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Mobile Layout */}
@@ -151,22 +172,31 @@ export default function LearningCard({ learningContent }: LearningCardProps) {
         {/* ID and Title */}
         <div>
           <div className="flex items-center space-x-2 mb-1">
-            <button
-              onClick={handleCopyId}
-              className="relative group text-xs text-gray-400 font-mono bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
-              title="クリックしてIDをコピー"
-            >
-              {learningContent.id.slice(0, 8)}...
-              {isCopied && (
-                <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                  コピーしました！
-                </span>
-              )}
-            </button>
+            {/* ID表示は管理者のみ */}
+            {isAdmin && (
+              <button
+                onClick={handleCopyId}
+                className="relative group text-xs text-gray-400 font-mono bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
+                title="クリックしてIDをコピー"
+              >
+                {learningContent.id.slice(0, 8)}...
+                {isCopied && (
+                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                    コピーしました！
+                  </span>
+                )}
+              </button>
+            )}
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">
+          <button
+            onClick={() => router.push(`/learnings/${learningContent.id}`)}
+            className={`text-lg font-semibold hover:text-blue-600 hover:underline text-left ${
+              isLearned ? 'text-gray-600' : 'text-gray-900'
+            }`}
+          >
             {learningContent.title}
-          </h3>
+            {isLearned && <span className="ml-2 text-sm text-gray-500">(クリア済み)</span>}
+          </button>
         </div>
 
         {/* Author and Difficulty */}
@@ -188,29 +218,33 @@ export default function LearningCard({ learningContent }: LearningCardProps) {
           </span>
         </div>
 
-        {/* Prerequisite Content ID */}
-        <div>
-          <span className="text-sm text-gray-500">
-            {learningContent.prerequisite_content_id ? `前提ID: ${learningContent.prerequisite_content_id.slice(0, 8)}...` : '前提なし'}
-          </span>
-        </div>
+        {/* Prerequisite Content ID - Admin only */}
+        {isAdmin && (
+          <div>
+            <span className="text-sm text-gray-500">
+              {learningContent.prerequisite_content_id ? `前提ID: ${learningContent.prerequisite_content_id.slice(0, 8)}...` : '前提なし'}
+            </span>
+          </div>
+        )}
 
-        {/* Action Buttons */}
-        <div className="flex space-x-2">
-          <button
-            onClick={handleEdit}
-            className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            編集
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isDeleting ? '削除中...' : '削除'}
-          </button>
-        </div>
+        {/* Action Buttons - Admin only */}
+        {isAdmin && (
+          <div className="flex space-x-2">
+            <button
+              onClick={handleEdit}
+              className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              編集
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isDeleting ? '削除中...' : '削除'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

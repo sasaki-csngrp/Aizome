@@ -1,7 +1,7 @@
 import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent } from "./models";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb, getReportsByUserIdFromDb, addLikeToDb, removeLikeFromDb, isReportLikedByUserFromDb, getLikeCountFromDb, insertLearningContent, getAllLearningContentsFromDb, getLearningContentByIdFromDb, updateLearningContentInDb, deleteLearningContentById } from "./db";
+import { authOptions } from "@/app/lib/auth";
+import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb, getReportsByUserIdFromDb, addLikeToDb, removeLikeFromDb, isReportLikedByUserFromDb, getLikeCountFromDb, insertLearningContent, getAllLearningContentsFromDb, getLearningContentByIdFromDb, updateLearningContentInDb, deleteLearningContentById, getUserLearnedContentIdsFromDb, insertUserLearnedContentToDb, getAvailableLearningContentsFromDb } from "./db";
 
 export async function createReport(title: string, content: string, type: 'report' | 'trend'): Promise<Report> {
   const session = await getServerSession(authOptions);
@@ -175,7 +175,7 @@ export async function toggleLike(reportId: string): Promise<{ liked: boolean; li
 }
 
 // Learning Content Services
-export async function createLearningContent(title: string, content: string, question: string, answer: string, difficulty: number, prerequisite_content_id?: string | null): Promise<LearningContent> {
+export async function createLearningContent(title: string, content: string, question: string, answer: string, difficulty: number, prerequisite_content_id?: string | null, is_public: boolean = false): Promise<LearningContent> {
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user || !session.user.id) {
@@ -190,6 +190,7 @@ export async function createLearningContent(title: string, content: string, ques
     answer,
     difficulty,
     prerequisite_content_id,
+    is_public,
   };
 
   const learningContent = await insertLearningContent(newLearningContent);
@@ -255,5 +256,62 @@ export async function deleteLearningContent(id: string): Promise<{ message: stri
   } catch (error) {
     console.error('Error deleting learning content:', error);
     throw new Error('Failed to delete learning content.');
+  }
+}
+
+// User Learning Content Services
+export async function getUserLearnedContentIds(userId: string): Promise<string[]> {
+  try {
+    const learnedContentIds = await getUserLearnedContentIdsFromDb(userId);
+    return learnedContentIds;
+  } catch (error) {
+    console.error('Error fetching user learned content IDs:', error);
+    throw new Error('Failed to fetch user learned content IDs.');
+  }
+}
+
+export async function markLearningContentAsLearned(contentId: string): Promise<void> {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("User not authenticated.");
+  }
+
+  try {
+    await insertUserLearnedContentToDb(session.user.id, contentId);
+  } catch (error) {
+    console.error('Error marking learning content as learned:', error);
+    throw new Error('Failed to mark learning content as learned.');
+  }
+}
+
+export async function getAvailableLearningContents(): Promise<LearningContent[]> {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("User not authenticated.");
+  }
+
+  try {
+    const availableContents = await getAvailableLearningContentsFromDb(session.user.id);
+    return availableContents;
+  } catch (error) {
+    console.error('Error fetching available learning contents:', error);
+    throw new Error('Failed to fetch available learning contents.');
+  }
+}
+
+export async function getLearningContentsForUser(): Promise<LearningContent[]> {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("User not authenticated.");
+  }
+
+  // 管理者の場合は全コンテンツを表示、ユーザーの場合は学習可能なコンテンツのみ
+  if (session.user.role === 'admin') {
+    return getAllLearningContents();
+  } else {
+    return getAvailableLearningContents();
   }
 }

@@ -19,6 +19,7 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
   const [answer, setAnswer] = useState(initialLearningContent?.answer || '')
   const [difficulty, setDifficulty] = useState<number>(initialLearningContent?.difficulty || 1)
   const [prerequisiteContentId, setPrerequisiteContentId] = useState(initialLearningContent?.prerequisite_content_id || '')
+  const [isPublic, setIsPublic] = useState<boolean>(initialLearningContent?.is_public || false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -33,6 +34,7 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
       setAnswer(initialLearningContent.answer);
       setDifficulty(initialLearningContent.difficulty);
       setPrerequisiteContentId(initialLearningContent.prerequisite_content_id || '');
+      setIsPublic(initialLearningContent.is_public || false);
     } else {
       setTitle('');
       setContent('');
@@ -40,6 +42,7 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
       setAnswer('');
       setDifficulty(1);
       setPrerequisiteContentId('');
+      setIsPublic(false);
     }
   }, [initialLearningContent]);
 
@@ -51,7 +54,7 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
 
     try {
       const method = initialLearningContent ? 'PUT' : 'POST';
-      const url = initialLearningContent ? `/api/learning-contents/${initialLearningContent.id}` : '/api/learning-contents';
+      const url = initialLearningContent ? `/api/learnings/${initialLearningContent.id}` : '/api/learnings';
 
       const response = await fetch(url, {
         method: method,
@@ -64,7 +67,8 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
           question, 
           answer, 
           difficulty, 
-          prerequisite_content_id: prerequisiteContentId || null 
+          prerequisite_content_id: prerequisiteContentId || null,
+          is_public: isPublic
         }),
       })
 
@@ -84,7 +88,7 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
         setPrerequisiteContentId('')
       }
       console.log('Learning content operation successful:', result)
-      router.push('/learning-contents');
+      router.push('/learnings');
     } catch (err: unknown) {
       let errorMessage = '予期せぬエラーが発生しました。';
       if (err instanceof Error) {
@@ -223,6 +227,25 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
             placeholder="前提となる学習教材のIDを入力してください"
             disabled={isSubmitting}
           />
+        </div>
+
+        <div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isPublic"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
+              disabled={isSubmitting}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <Label htmlFor="isPublic" className="text-sm font-medium text-gray-700">
+              公開する（ユーザーが学習できるようにする）
+            </Label>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            チェックを外すと、管理者のみが閲覧可能な非公開コンテンツになります
+          </p>
         </div>
 
         <button
