@@ -27,7 +27,7 @@ export default function Header() {
         </Link>
       </SheetClose>
       <SheetClose asChild>
-        <Link href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <Link href="/quests" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
           クエスト
         </Link>
       </SheetClose>
@@ -72,7 +72,7 @@ export default function Header() {
             <Link href="/reports" className="text-gray-600 hover:text-gray-800">
               レポート
             </Link>
-            <Link href="#" className="text-gray-600 hover:text-gray-800">
+            <Link href="/quests" className="text-gray-600 hover:text-gray-800">
               クエスト
             </Link>
             <Link href="/trends" className="text-gray-600 hover:text-gray-800">

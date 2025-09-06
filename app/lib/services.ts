@@ -1,7 +1,7 @@
-import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent } from "./models";
+import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent, Quest, UserClearedQuest } from "./models";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/lib/auth";
-import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb, getReportsByUserIdFromDb, addLikeToDb, removeLikeFromDb, isReportLikedByUserFromDb, getLikeCountFromDb, insertLearningContent, getAllLearningContentsFromDb, getLearningContentByIdFromDb, updateLearningContentInDb, deleteLearningContentById, getUserLearnedContentIdsFromDb, insertUserLearnedContentToDb, getAvailableLearningContentsFromDb } from "./db";
+import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb, getReportsByUserIdFromDb, addLikeToDb, removeLikeFromDb, isReportLikedByUserFromDb, getLikeCountFromDb, insertLearningContent, getAllLearningContentsFromDb, getLearningContentByIdFromDb, updateLearningContentInDb, deleteLearningContentById, getUserLearnedContentIdsFromDb, insertUserLearnedContentToDb, getAvailableLearningContentsFromDb, getQuestsFromDb, getUserClearedQuestsFromDb, insertUserClearedQuestToDb } from "./db";
 
 export async function createReport(title: string, content: string, type: 'report' | 'trend'): Promise<Report> {
   const session = await getServerSession(authOptions);
@@ -313,5 +313,88 @@ export async function getLearningContentsForUser(): Promise<LearningContent[]> {
     return getAllLearningContents();
   } else {
     return getAvailableLearningContents();
+  }
+}
+
+// Quest Services
+export async function getQuests(): Promise<Quest[]> {
+  try {
+    const quests = await getQuestsFromDb();
+    return quests;
+  } catch (error) {
+    console.error('Error fetching quests:', error);
+    throw new Error('Failed to fetch quests.');
+  }
+}
+
+export async function getQuestsWithUserStatus(): Promise<Quest[]> {
+  const session = await getServerSession(authOptions);
+  
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("User not authenticated.");
+  }
+
+  try {
+    const [quests, clearedQuests] = await Promise.all([
+      getQuestsFromDb(),
+      getUserClearedQuestsFromDb(session.user.id)
+    ]);
+
+    const clearedQuestMap = new Map<string, Date>();
+    clearedQuests.forEach(cleared => {
+      clearedQuestMap.set(cleared.quest_id, cleared.cleared_at);
+    });
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+
+    return quests.map(quest => {
+      const clearedAt = clearedQuestMap.get(quest.id);
+      let isCleared = false;
+
+      if (clearedAt) {
+        switch (quest.category) {
+          case 'tutorial':
+          case 'learning':
+            isCleared = true;
+            break;
+          case 'daily':
+            const clearedDate = new Date(clearedAt);
+            const clearedToday = new Date(clearedDate.getFullYear(), clearedDate.getMonth(), clearedDate.getDate());
+            isCleared = clearedToday.getTime() === today.getTime();
+            break;
+          case 'weekly':
+            const clearedWeek = new Date(clearedAt);
+            isCleared = clearedWeek >= weekStart;
+            break;
+        }
+      }
+
+      return {
+        ...quest,
+        cleared_at: clearedAt || null,
+        is_cleared: isCleared
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching quests with user status:', error);
+    throw new Error('Failed to fetch quests with user status.');
+  }
+}
+
+export async function markQuestAsCleared(questId: string): Promise<void> {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("User not authenticated.");
+  }
+
+  try {
+    await insertUserClearedQuestToDb(session.user.id, questId);
+  } catch (error) {
+    console.error('Error marking quest as cleared:', error);
+    throw new Error('Failed to mark quest as cleared.');
   }
 }

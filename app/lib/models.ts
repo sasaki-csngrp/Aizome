@@ -87,3 +87,24 @@ export interface UserLearnedContent {
   learned_at: Date;
 }
 
+export interface Quest {
+  id: string;
+  title: string;
+  description: string | null;
+  category: 'tutorial' | 'daily' | 'weekly' | 'learning';
+  points: number;
+  trigger_event: string | null;
+  target_id: string | null;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+  cleared_at?: Date | null;
+  is_cleared?: boolean;
+}
+
+export interface UserClearedQuest {
+  user_id: string;
+  quest_id: string;
+  cleared_at: Date;
+}
+

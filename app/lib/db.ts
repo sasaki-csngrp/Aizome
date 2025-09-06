@@ -1,6 +1,6 @@
 import { sql } from '@vercel/postgres';
 import { unstable_noStore as noStore } from 'next/cache';
-import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent, UserLearnedContent } from './models';
+import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent, UserLearnedContent, Quest, UserClearedQuest } from './models';
 
 export async function insertReport(report: NewReport): Promise<Report> {
   try {
@@ -466,5 +466,69 @@ export async function getAvailableLearningContentsFromDb(userId: string): Promis
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch available learning contents.');
+  }
+}
+
+// Quest Database Functions
+export async function getQuestsFromDb(): Promise<Quest[]> {
+  try {
+    const { rows } = await sql<Quest>`
+      SELECT 
+        id,
+        title,
+        description,
+        category,
+        points,
+        trigger_event,
+        target_id,
+        is_active,
+        created_at,
+        updated_at
+      FROM quests 
+      WHERE is_active = true
+      ORDER BY 
+        CASE category 
+          WHEN 'tutorial' THEN 1
+          WHEN 'daily' THEN 2
+          WHEN 'weekly' THEN 3
+          WHEN 'learning' THEN 4
+        END,
+        points ASC
+    `;
+    return rows;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch quests.');
+  }
+}
+
+export async function getUserClearedQuestsFromDb(userId: string): Promise<UserClearedQuest[]> {
+  try {
+    const { rows } = await sql<UserClearedQuest>`
+      SELECT 
+        user_id,
+        quest_id,
+        cleared_at
+      FROM user_cleared_quests 
+      WHERE user_id = ${userId}
+      ORDER BY cleared_at DESC
+    `;
+    return rows;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch user cleared quests.');
+  }
+}
+
+export async function insertUserClearedQuestToDb(userId: string, questId: string): Promise<void> {
+  try {
+    await sql`
+      INSERT INTO user_cleared_quests (user_id, quest_id) 
+      VALUES (${userId}, ${questId}) 
+      ON CONFLICT (user_id, quest_id, cleared_at) DO NOTHING
+    `;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to insert user cleared quest.');
   }
 }
