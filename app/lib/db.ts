@@ -532,3 +532,42 @@ export async function insertUserClearedQuestToDb(userId: string, questId: string
     throw new Error('Failed to insert user cleared quest.');
   }
 }
+
+export async function clearQuestsAndUpdatePoints(userId: string, questIds: string[]): Promise<number> {
+  try {
+    let totalPoints = 0;
+    
+    // 各クエストのポイントを取得
+    for (const questId of questIds) {
+      const questResult = await sql`
+        SELECT points FROM quests WHERE id = ${questId}
+      `;
+      if (questResult.rows.length > 0) {
+        totalPoints += questResult.rows[0].points;
+      }
+    }
+    
+    // クエストクリア記録を追加
+    for (const questId of questIds) {
+      await sql`
+        INSERT INTO user_cleared_quests (user_id, quest_id) 
+        VALUES (${userId}, ${questId}) 
+        ON CONFLICT (user_id, quest_id, cleared_at) DO NOTHING
+      `;
+    }
+    
+    // ユーザーのポイントを更新
+    if (totalPoints > 0) {
+      await sql`
+        UPDATE users 
+        SET total_points = COALESCE(total_points, 0) + ${totalPoints}
+        WHERE id = ${userId}
+      `;
+    }
+    
+    return totalPoints;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to clear quests and update points.');
+  }
+}

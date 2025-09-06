@@ -6,25 +6,13 @@ import { authOptions } from "@/app/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { formatDateToYYYYMMDD } from "@/app/lib/utils";
+import ContentWithLinks from "@/app/components/ContentWithLinks";
 
 export default async function TrendsPage() {
   const trends = await getTrends();
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id;
 
-  const renderContentWithLinks = (content: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return content.split(urlRegex).map((part, index) => {
-      if (part.match(urlRegex)) {
-        return (
-          <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-            {part}
-          </a>
-        );
-      }
-      return part;
-    });
-  };
 
   return (
     <div className="container mx-auto p-4">
@@ -48,7 +36,9 @@ export default async function TrendsPage() {
               </Avatar>
               <span>{trend.authorname || 'Unknown'}</span>
             </Link>
-            <p className="text-gray-700 mb-4 line-clamp-3 flex-grow">{renderContentWithLinks(trend.content)}</p>
+            <Link href={`/trends/${trend.id}`} className="text-gray-700 mb-4 line-clamp-3 flex-grow hover:text-blue-600 transition-colors">
+              <ContentWithLinks content={trend.content} />
+            </Link>
             <div className="text-sm text-gray-500 mb-2">
               <p>投稿日: {formatDateToYYYYMMDD(trend.createdAt)}</p>
               <p>更新日: {formatDateToYYYYMMDD(trend.updatedAt)}</p>

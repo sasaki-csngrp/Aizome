@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import MarkdownRenderer from '@/app/components/MarkdownRenderer'
 import { Report } from '@/app/lib/models'
 import { useRouter } from 'next/navigation'
+import QuestClearPopup from './QuestClearPopup'
 
 interface ReportFormProps {
   initialReport?: Report;
@@ -20,6 +21,8 @@ export default function ReportForm({ initialReport, initialType }: ReportFormPro
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [showQuestPopup, setShowQuestPopup] = useState(false)
+  const [questPoints, setQuestPoints] = useState(0)
   const router = useRouter();
 
   useEffect(() => {
@@ -63,6 +66,34 @@ export default function ReportForm({ initialReport, initialType }: ReportFormPro
       if (!initialReport) {
         setTitle('')
         setContent('')
+        
+        // 新規投稿時のクエストクリアチェック
+        try {
+          const questResponse = await fetch('/api/checkClearQuest', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              trigger_event: 'report_posted'
+            }),
+          });
+          
+          if (questResponse.ok) {
+            const questResult = await questResponse.json();
+            if (questResult.points > 0) {
+              setQuestPoints(questResult.points);
+              setShowQuestPopup(true);
+              // ポップアップ表示後にページ遷移を遅延
+              setTimeout(() => {
+                router.push(type === 'report' ? '/reports' : '/trends');
+              }, 3000);
+              return;
+            }
+          }
+        } catch (questError) {
+          console.error('Quest check error:', questError);
+        }
       }
       console.log('Report operation successful:', result)
       router.push(type === 'report' ? '/reports' : '/trends');
@@ -163,6 +194,12 @@ export default function ReportForm({ initialReport, initialType }: ReportFormPro
           <MarkdownRenderer content={content || '内容がここに表示されます'} />
         </div>
       </div>
+      
+      <QuestClearPopup
+        isOpen={showQuestPopup}
+        onClose={() => setShowQuestPopup(false)}
+        points={questPoints}
+      />
     </div>
   )
 }

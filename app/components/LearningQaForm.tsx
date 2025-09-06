@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import QuestClearPopup from "./QuestClearPopup";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -14,6 +15,8 @@ export default function LearningQaForm({ question, answer, contentId, onLearning
   const [showQuestion, setShowQuestion] = useState(false);
   const [userAnswer, setUserAnswer] = useState("");
   const [result, setResult] = useState<"correct" | "incorrect" | null>(null);
+  const [showQuestPopup, setShowQuestPopup] = useState(false);
+  const [questPoints, setQuestPoints] = useState(0);
 
   const handleShowQuestion = () => {
     setShowQuestion(true);
@@ -39,6 +42,30 @@ export default function LearningQaForm({ question, answer, contentId, onLearning
         
         if (response.ok) {
           onLearningComplete?.();
+          
+          // 学習コンテンツ正解時のクエストクリアチェック
+          try {
+            const questResponse = await fetch('/api/checkClearQuest', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                trigger_event: 'content_learned',
+                target_id: contentId
+              }),
+            });
+            
+            if (questResponse.ok) {
+              const questResult = await questResponse.json();
+              if (questResult.points > 0) {
+                setQuestPoints(questResult.points);
+                setShowQuestPopup(true);
+              }
+            }
+          } catch (questError) {
+            console.error('Quest check error:', questError);
+          }
         } else {
           console.error('Failed to mark learning content as learned');
         }
@@ -142,6 +169,12 @@ export default function LearningQaForm({ question, answer, contentId, onLearning
           )}
         </div>
       )}
+      
+      <QuestClearPopup
+        isOpen={showQuestPopup}
+        onClose={() => setShowQuestPopup(false)}
+        points={questPoints}
+      />
     </div>
   );
 }

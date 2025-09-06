@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Avatar as UIAvatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { updateUserProfile } from "@/app/(main)/profile/actions";
+import QuestClearPopup from "./QuestClearPopup";
 
 interface ProfileFormProps {
   user: User;
@@ -23,6 +24,8 @@ export default function ProfileForm({ user, avatars }: ProfileFormProps) {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [showQuestPopup, setShowQuestPopup] = useState(false);
+  const [questPoints, setQuestPoints] = useState(0);
 
   useEffect(() => {
     setNickname(user.nickname || "");
@@ -49,6 +52,30 @@ export default function ProfileForm({ user, avatars }: ProfileFormProps) {
         parseInt(selectedAvatarId)
       );
       setMessage("プロフィールが正常に更新されました。");
+      
+      // クエストクリアチェック
+      try {
+        const response = await fetch('/api/checkClearQuest', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            trigger_event: 'profile_updated'
+          }),
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.points > 0) {
+            setQuestPoints(result.points);
+            setShowQuestPopup(true);
+          }
+        }
+      } catch (questError) {
+        console.error('Quest check error:', questError);
+        // クエストチェックのエラーは無視（プロフィール更新は成功している）
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "不明なエラーが発生しました。";
       setMessage(`プロフィールの更新中にエラーが発生しました: ${errorMessage}`);
@@ -134,6 +161,12 @@ export default function ProfileForm({ user, avatars }: ProfileFormProps) {
           {isSubmitting ? "保存中..." : "プロフィールを保存"}
         </Button>
       </div>
+      
+      <QuestClearPopup
+        isOpen={showQuestPopup}
+        onClose={() => setShowQuestPopup(false)}
+        points={questPoints}
+      />
     </form>
   );
 }
