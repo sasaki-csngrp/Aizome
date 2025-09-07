@@ -2,6 +2,8 @@ import ReportForm from '@/app/components/ReportForm';
 import { getReportById } from '@/app/lib/services';
 import Link from 'next/link';
 
+export const revalidate = 0;
+
 export default async function EditReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const report = await getReportById(id);

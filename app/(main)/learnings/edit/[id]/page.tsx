@@ -3,6 +3,8 @@ import LearningForm from '@/app/components/LearningForm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+export const revalidate = 0;
+
 interface EditLearningPageProps {
   params: Promise<{ id: string }>;
 }

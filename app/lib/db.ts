@@ -88,6 +88,7 @@ export async function deleteReportById(id: string) {
 }
 
 export async function getReportByIdFromDb(id: string): Promise<Report | null> {
+  noStore();
   try {
     const { rows } = await sql<Report>`
       SELECT
@@ -344,6 +345,7 @@ export async function getAllLearningContentsFromDb(): Promise<LearningContent[]>
 }
 
 export async function getLearningContentByIdFromDb(id: string): Promise<LearningContent | null> {
+  noStore();
   try {
     const { rows } = await sql<LearningContent>`
       SELECT
