@@ -112,7 +112,7 @@ export default function ReportForm({ initialReport, initialType }: ReportFormPro
   return (
     <div className="w-full bg-white p-8 rounded-lg shadow-lg flex flex-col md:flex-row gap-8">
       {/* Left Column: Input Form */}
-      <form onSubmit={handleSubmit} className="flex-1 space-y-6">
+      <form onSubmit={handleSubmit} className="w-full md:w-1/2 min-w-0 space-y-6">
         <h1 className="text-3xl font-bold text-center mb-6">{initialReport ? '投稿の編集' : '新規投稿の作成'}</h1>
 
         {/* Type Selection */}
@@ -187,9 +187,9 @@ export default function ReportForm({ initialReport, initialType }: ReportFormPro
       </form>
 
       {/* Right Column: Real-time Preview */}
-      <div className="flex-1 bg-gray-50 p-6 rounded-md border border-gray-200 flex flex-col">
+      <div className="w-full md:w-1/2 min-w-0 bg-gray-50 p-6 rounded-md border border-gray-200 flex flex-col">
         <h2 className="text-2xl font-semibold mb-4">プレビュー</h2>
-        <div className="overflow-y-auto h-96 pr-4">
+        <div className="overflow-y-auto overflow-x-auto h-96 md:h-[60vh] pr-4 break-words">
           <h3 className="text-xl font-bold mb-2">{title || 'タイトルがここに入力されます'}</h3>
           <MarkdownRenderer content={content || '内容がここに表示されます'} />
         </div>
