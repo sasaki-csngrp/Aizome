@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import MarkdownRenderer from '@/app/components/MarkdownRenderer'
+import MarkdownRendererClient from '@/app/components/MarkdownRendererClient'
 import { LearningContent } from '@/app/lib/models'
 import { useRouter } from 'next/navigation'
 
@@ -270,20 +270,20 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
           
           <div>
             <h4 className="text-lg font-semibold mb-2">学習内容</h4>
-            <MarkdownRenderer content={content || '内容がここに表示されます'} />
+            <MarkdownRendererClient content={content || '内容がここに表示されます'} />
           </div>
           
           <div>
             <h4 className="text-lg font-semibold mb-2">問題</h4>
             <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
-              <MarkdownRenderer content={question || '問題がここに表示されます'} />
+              <MarkdownRendererClient content={question || '問題がここに表示されます'} />
             </div>
           </div>
           
           <div>
             <h4 className="text-lg font-semibold mb-2">回答</h4>
             <div className="bg-green-50 p-3 rounded border-l-4 border-green-400">
-              <MarkdownRenderer content={answer || '回答がここに表示されます'} />
+              <MarkdownRendererClient content={answer || '回答がここに表示されます'} />
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import MarkdownRenderer from '@/app/components/MarkdownRenderer'
+import MarkdownRendererClient from '@/app/components/MarkdownRendererClient'
 import { Report } from '@/app/lib/models'
 import { useRouter } from 'next/navigation'
 import QuestClearPopup from './QuestClearPopup'
@@ -191,7 +191,7 @@ export default function ReportForm({ initialReport, initialType }: ReportFormPro
         <h2 className="text-2xl font-semibold mb-4">プレビュー</h2>
         <div className="overflow-y-auto overflow-x-auto h-96 md:h-[60vh] pr-4 break-words">
           <h3 className="text-xl font-bold mb-2">{title || 'タイトルがここに入力されます'}</h3>
-          <MarkdownRenderer content={content || '内容がここに表示されます'} />
+          <MarkdownRendererClient content={content || '内容がここに表示されます'} />
         </div>
       </div>
       
