@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { Pool } from 'pg'
 import bcrypt from 'bcrypt'
+import { createVerificationToken } from '@/app/lib/verification'
+import { sendVerificationEmail } from '@/app/lib/email'
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -43,10 +45,31 @@ export async function POST(req: Request) {
       const name = email.split('@')[0];
       const newUser = await client.query(
         'INSERT INTO users (name, email, "hashedPassword", "emailVerified") VALUES ($1, $2, $3, $4) RETURNING id, name, email',
-        [name, email, hashedPassword, new Date()] // emailVerified は仮で現在時刻を設定
+        [name, email, hashedPassword, null] // emailVerified は null で登録
       );
 
-      return NextResponse.json(newUser.rows[0], { status: 201 });
+      const user = newUser.rows[0];
+
+      // 確認トークンを生成
+      const token = await createVerificationToken(email);
+
+      // 確認メールを送信
+      const emailResult = await sendVerificationEmail({
+        to: email,
+        token,
+        name: user.name
+      });
+
+      if (!emailResult.success) {
+        console.error('Failed to send verification email:', emailResult.error);
+        // メール送信に失敗してもユーザー登録は成功とする
+        // ただし、ログには記録する
+      }
+
+      return NextResponse.json({ 
+        ...user, 
+        message: 'User created successfully. Please check your email for verification.' 
+      }, { status: 201 });
     } finally {
       client.release();
     }

@@ -33,7 +33,8 @@ export default function SignupPage() {
       })
 
       if (res.ok) {
-        router.push('/login?message=signup_success')
+        // メールアドレスをクエリパラメータとして渡す
+        router.push(`/signup/check-email?email=${encodeURIComponent(email)}`)
       } else {
         const data = await res.json()
         setError(data.error || '登録中にエラーが発生しました。')
