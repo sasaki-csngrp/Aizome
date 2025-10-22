@@ -17,6 +17,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
+    // ドメインチェックを追加
+    const domain = email.split('@')[1];
+    const allowedDomains = process.env.ALLOWED_DOMAINS?.split(',').map(d => d.trim()) || [];
+
+    if (allowedDomains.length > 0 && !allowedDomains.includes(domain)) {
+      return NextResponse.json({ 
+        error: '申し訳ございません。本サービスは承認されたドメインユーザーのみ利用可能です。\nご利用を希望される場合は、最寄りの弊社担当者へお伝え下さい。' 
+      }, { status: 403 });
+    }
+
     // パスワードをハッシュ化
     const hashedPassword = await bcrypt.hash(password, 10);
 
