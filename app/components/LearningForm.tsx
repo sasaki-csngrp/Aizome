@@ -122,7 +122,7 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
   return (
     <div className="w-full bg-white p-8 rounded-lg shadow-lg flex flex-col md:flex-row gap-8">
       {/* Left Column: Input Form */}
-      <form onSubmit={handleSubmit} className="flex-1 space-y-6">
+      <form onSubmit={handleSubmit} className="w-full md:w-1/2 min-w-0 max-h-[calc(100vh-8rem)] overflow-y-auto space-y-6 pr-4">
         {initialLearningContent && (
           <div className="text-center mb-4">
             <button
@@ -164,7 +164,8 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="学習内容を入力してください（マークダウン対応）"
-            rows={8}
+            rows={6}
+            className="max-h-[200px] overflow-y-auto"
             disabled={isSubmitting}
             required
           />
@@ -178,6 +179,7 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="学習問題を入力してください"
             rows={4}
+            className="max-h-[250px] overflow-y-auto"
             disabled={isSubmitting}
             required
           />
@@ -191,6 +193,7 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
             onChange={(e) => setAnswer(e.target.value)}
             placeholder="問題の回答を入力してください"
             rows={4}
+            className="max-h-[250px] overflow-y-auto"
             disabled={isSubmitting}
             required
           />
@@ -258,9 +261,9 @@ export default function LearningForm({ initialLearningContent }: LearningFormPro
       </form>
 
       {/* Right Column: Real-time Preview */}
-      <div className="flex-1 bg-gray-50 p-6 rounded-md border border-gray-200 flex flex-col">
+      <div className="w-full md:w-1/2 min-w-0 bg-gray-50 p-6 rounded-md border border-gray-200 flex flex-col">
         <h2 className="text-2xl font-semibold mb-4">プレビュー</h2>
-        <div className="overflow-y-auto h-198 pr-4 space-y-4">
+        <div className="overflow-y-auto overflow-x-auto h-96 md:h-[60vh] pr-4 space-y-4">
           <div>
             <h3 className="text-xl font-bold mb-2">{title || 'タイトルがここに入力されます'}</h3>
             <div className="text-sm text-gray-600 mb-2">

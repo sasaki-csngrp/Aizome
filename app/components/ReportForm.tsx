@@ -112,7 +112,7 @@ export default function ReportForm({ initialReport, initialType }: ReportFormPro
   return (
     <div className="w-full bg-white p-8 rounded-lg shadow-lg flex flex-col md:flex-row gap-8">
       {/* Left Column: Input Form */}
-      <form onSubmit={handleSubmit} className="w-full md:w-1/2 min-w-0 space-y-6">
+      <form onSubmit={handleSubmit} className="w-full md:w-1/2 min-w-0 max-h-[calc(100vh-8rem)] overflow-y-auto space-y-6 pr-4">
         <h1 className="text-3xl font-bold text-center mb-6">{initialReport ? '投稿の編集' : '新規投稿の作成'}</h1>
 
         {/* Type Selection */}
@@ -171,7 +171,8 @@ export default function ReportForm({ initialReport, initialType }: ReportFormPro
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="投稿の内容を入力してください"
-            rows={15}
+            rows={8}
+            className="max-h-[350px] overflow-y-auto"
             disabled={isSubmitting}
             required
           />
