@@ -20,7 +20,7 @@ AI学習から
 - **Frontend/Backend**: Next.js (App Router)
 - **Database**: Vercel PostgreSQL
 - **Hosting**: Vercel
-- **Authentication**: Auth.js
+- **Authentication**: Auth.js + SendGrid
 - **AI**: ChatGPT API (予定)
 
 ## コーディング支援:  

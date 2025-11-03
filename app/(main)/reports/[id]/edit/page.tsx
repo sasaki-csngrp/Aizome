@@ -2,6 +2,8 @@ import ReportForm from '@/app/components/ReportForm';
 import { getReportById } from '@/app/lib/services';
 import Link from 'next/link';
 
+// キャッシュを無効化して常に最新のデータを取得
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function EditReportPage({ params }: { params: Promise<{ id: string }> }) {

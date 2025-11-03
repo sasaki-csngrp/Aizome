@@ -7,6 +7,10 @@ import Link from "next/link";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { formatDateToYYYYMMDD } from "@/app/lib/utils";
 
+// キャッシュを無効化して常に最新のデータを取得
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const report = await getReportById(id);
