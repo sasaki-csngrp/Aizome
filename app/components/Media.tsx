@@ -10,8 +10,30 @@ export type VideoProps = Omit<
   downloadName?: string;
 };
 
+/**
+ * S3の直接URLをプロキシURLに変換
+ * 例: https://aizome-xxx-1.s3.amazonaws.com/contents/videos/video006.mp4
+ *  → /api/media/contents/videos/video006.mp4
+ */
+function convertS3UrlToProxyUrl(url: string): string {
+  // S3のURLパターンを検出
+  // パターン1: https://bucket-name.s3.amazonaws.com/path/to/file
+  // パターン2: https://bucket-name.s3.region.amazonaws.com/path/to/file
+  const s3Pattern = /https?:\/\/([^/]+)\.s3(?:\.([^.]+))?\.amazonaws\.com\/(.+)/;
+  const match = url.match(s3Pattern);
+  
+  if (match) {
+    // パス部分を抽出してプロキシURLに変換
+    const path = match[3];
+    return `/api/media/${path}`;
+  }
+  
+  // S3のURLでない場合はそのまま返す
+  return url;
+}
+
 export function Video({ src, preload = "metadata", showDownload = false, downloadName, ...rest }: VideoProps) {
-  const srcString = typeof src === "string" ? src : undefined;
+  const srcString = typeof src === "string" ? convertS3UrlToProxyUrl(src) : undefined;
   return (
     <div className="space-y-2">
       <video src={srcString} preload={preload} controls {...rest} />
@@ -40,7 +62,7 @@ export type AudioProps = Omit<
 };
 
 export function Audio({ src, showDownload = false, downloadName, ...rest }: AudioProps) {
-  const srcString = typeof src === "string" ? src : undefined;
+  const srcString = typeof src === "string" ? convertS3UrlToProxyUrl(src) : undefined;
   return (
     <div className="space-y-2">
       <audio src={srcString} controls preload="metadata" {...rest} />
