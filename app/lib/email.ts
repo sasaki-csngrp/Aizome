@@ -1,7 +1,65 @@
-import sgMail from '@sendgrid/mail'
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 
-// SendGrid クライアントを初期化
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!)
+const sesClient = new SESClient({
+  region: process.env.AWS_REGION ?? 'ap-northeast-1',
+})
+
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+}: {
+  to: string
+  subject: string
+  html: string
+  text?: string
+}) {
+  const fromEmail = process.env.EMAIL_FROM
+
+  if (!fromEmail) {
+    throw new Error('EMAIL_FROM environment variable is not set')
+  }
+
+  const textContent = text ?? html.replace(/<[^>]*>/g, '')
+
+  const command = new SendEmailCommand({
+    Source: fromEmail,
+    Destination: {
+      ToAddresses: [to],
+    },
+    Message: {
+      Subject: {
+        Charset: 'UTF-8',
+        Data: subject,
+      },
+      Body: {
+        Html: {
+          Charset: 'UTF-8',
+          Data: html,
+        },
+        Text: {
+          Charset: 'UTF-8',
+          Data: textContent,
+        },
+      },
+    },
+  })
+
+  console.log('Sending email:', { to, from: fromEmail, subject })
+
+  try {
+    const result = await sesClient.send(command)
+    console.log('SES email sent successfully:', {
+      messageId: result.MessageId,
+    })
+    return { success: true }
+  } catch (error: unknown) {
+    console.error('SES error occurred:')
+    console.error('Error:', error)
+    throw error
+  }
+}
 
 export interface VerificationEmailData {
   to: string
@@ -13,11 +71,8 @@ export async function sendVerificationEmail({ to, token, name }: VerificationEma
   const verificationUrl = `${process.env.NEXTAUTH_URL}/api/verify-email?token=${token}`
   const displayName = name || to.split('@')[0]
 
-  const msg = {
-    to,
-    from: process.env.SENDGRID_FROM_EMAIL!,
-    subject: 'メールアドレスの確認をお願いします',
-    text: `
+  const subject = 'メールアドレスの確認をお願いします'
+  const text = `
 ${displayName} 様
 
 Aizome へのご登録ありがとうございます。
@@ -32,8 +87,8 @@ ${verificationUrl}
 
 ---
 Aizome チーム
-    `.trim(),
-    html: `
+  `.trim()
+  const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -77,11 +132,10 @@ Aizome チーム
   </div>
 </body>
 </html>
-    `.trim(),
-  }
+  `.trim()
 
   try {
-    await sgMail.send(msg)
+    await sendEmail({ to, subject, html, text })
     console.log(`Verification email sent to ${to}`)
     return { success: true }
   } catch (error) {
