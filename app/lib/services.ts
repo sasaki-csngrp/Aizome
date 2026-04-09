@@ -1,7 +1,7 @@
 import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent, Quest, UserClearedQuest } from "./models";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/lib/auth";
-import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb, getReportsByUserIdFromDb, addLikeToDb, removeLikeFromDb, isReportLikedByUserFromDb, getLikeCountFromDb, insertLearningContent, getAllLearningContentsFromDb, getLearningContentByIdFromDb, updateLearningContentInDb, deleteLearningContentById, getUserLearnedContentIdsFromDb, insertUserLearnedContentToDb, getAvailableLearningContentsFromDb, getQuestsFromDb, getUserClearedQuestsFromDb, insertUserClearedQuestToDb } from "./db";
+import { insertReport, getAllReportsFromDb, getReportByIdFromDb, updateReportInDb, deleteReportById, getTrendsFromDb, getAvatarsFromDb, getUserByIdFromDb, updateUserInDb, getReportsByUserIdFromDb, addLikeToDb, removeLikeFromDb, isReportLikedByUserFromDb, getLikeCountFromDb, insertLearningContent, getAllLearningContentsFromDb, getLearningContentByIdFromDb, updateLearningContentInDb, deleteLearningContentById, getUserLearnedContentIdsFromDb, insertUserLearnedContentToDb, getAvailableLearningContentsFromDb, getQuestsFromDb, getUserClearedQuestsFromDb, insertUserClearedQuestToDb, getReportsPaginatedFromDb, getTrendsPaginatedFromDb, getLearningContentsPaginatedFromDb } from "./db";
 
 export async function createReport(title: string, content: string, type: 'report' | 'trend'): Promise<Report> {
   const session = await getServerSession(authOptions);
@@ -31,10 +31,28 @@ export async function getAllReports(): Promise<Report[]> {
   }
 }
 
+export async function getReportsPaginated(limit: number, offset: number): Promise<{ rows: Report[]; total: number }> {
+  try {
+    return await getReportsPaginatedFromDb(limit, offset);
+  } catch (error) {
+    console.error('Error fetching reports:', error);
+    throw new Error('Failed to fetch reports.');
+  }
+}
+
 export async function getTrends(): Promise<Report[]> {
   try {
     const trends = await getTrendsFromDb();
     return trends;
+  } catch (error) {
+    console.error('Error fetching trends:', error);
+    throw new Error('Failed to fetch trends.');
+  }
+}
+
+export async function getTrendsPaginated(limit: number, offset: number): Promise<{ rows: Report[]; total: number }> {
+  try {
+    return await getTrendsPaginatedFromDb(limit, offset);
   } catch (error) {
     console.error('Error fetching trends:', error);
     throw new Error('Failed to fetch trends.');
@@ -313,6 +331,29 @@ export async function getLearningContentsForUser(): Promise<LearningContent[]> {
     return getAllLearningContents();
   } else {
     return getAvailableLearningContents();
+  }
+}
+
+export async function getLearningContentsPaginated(
+  limit: number,
+  offset: number
+): Promise<{ rows: LearningContent[]; total: number }> {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("User not authenticated.");
+  }
+
+  try {
+    return await getLearningContentsPaginatedFromDb(
+      limit,
+      offset,
+      session.user.id,
+      session.user.role === 'admin'
+    );
+  } catch (error) {
+    console.error('Error fetching learning contents:', error);
+    throw new Error('Failed to fetch learning contents.');
   }
 }
 

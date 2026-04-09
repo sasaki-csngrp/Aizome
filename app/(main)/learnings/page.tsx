@@ -1,13 +1,15 @@
-import { getLearningContentsForUser } from '@/app/lib/services';
-import LearningList from '@/app/components/LearningList';
+import { getLearningContentsPaginated } from '@/app/lib/services';
+import LearningLoadMoreList from '@/app/components/LearningLoadMoreList';
 import Link from 'next/link';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/lib/auth';
 
+const PAGE_SIZE = 10;
+
 export default async function LearningsPage() {
   const session = await getServerSession(authOptions);
-  const learningContents = await getLearningContentsForUser();
   const isAdmin = session?.user?.role === 'admin';
+  const { rows: initialContents, total } = await getLearningContentsPaginated(PAGE_SIZE, 0);
 
   return (
     <div className="container mx-auto px-2 py-12 sm:px-6 lg:px-8">
@@ -17,16 +19,16 @@ export default async function LearningsPage() {
             {isAdmin ? '学習コンテンツ管理' : 'AI学習'}
           </h1>
           {isAdmin && (
-            <Link 
-              href="/learnings/new" 
+            <Link
+              href="/learnings/new"
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
             >
               新規作成
             </Link>
           )}
         </div>
-        
-        <LearningList learningContents={learningContents} />
+
+        <LearningLoadMoreList initialItems={initialContents} total={total} />
       </div>
     </div>
   );

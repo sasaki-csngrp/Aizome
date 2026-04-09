@@ -76,6 +76,142 @@ export async function getTrendsFromDb(): Promise<Report[]> {
   }
 }
 
+export async function getReportsPaginatedFromDb(limit: number, offset: number): Promise<{ rows: Report[]; total: number }> {
+  try {
+    const { rows } = await sql<Report & { total_count: string }>`
+      SELECT
+        r.id,
+        r.author_id,
+        COALESCE(u.nickname, u.name, 'Unknown') as authorname,
+        COALESCE(a.image_url, u.image) as "authorImage",
+        r.title,
+        r.content,
+        r.created_at as "createdAt",
+        r.updated_at as "updatedAt",
+        r.type,
+        (SELECT COUNT(*)::int FROM likes l WHERE l.report_id = r.id) AS "likeCount",
+        COUNT(*) OVER() AS total_count
+      FROM reports r
+      JOIN users u ON r.author_id = u.id
+      LEFT JOIN avatars a ON u.avatar_id = a.id
+      WHERE r.type = 'report'
+      ORDER BY r.created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+    const total = rows.length > 0 ? parseInt(rows[0].total_count) : 0;
+    return { rows, total };
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch reports.');
+  }
+}
+
+export async function getTrendsPaginatedFromDb(limit: number, offset: number): Promise<{ rows: Report[]; total: number }> {
+  try {
+    const { rows } = await sql<Report & { total_count: string }>`
+      SELECT
+        r.id,
+        r.author_id,
+        COALESCE(u.nickname, u.name, 'Unknown') as authorname,
+        COALESCE(a.image_url, u.image) as "authorImage",
+        r.title,
+        r.content,
+        r.created_at as "createdAt",
+        r.updated_at as "updatedAt",
+        r.type,
+        (SELECT COUNT(*)::int FROM likes l WHERE l.report_id = r.id) AS "likeCount",
+        COUNT(*) OVER() AS total_count
+      FROM reports r
+      JOIN users u ON r.author_id = u.id
+      LEFT JOIN avatars a ON u.avatar_id = a.id
+      WHERE r.type = 'trend'
+      ORDER BY r.created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+    const total = rows.length > 0 ? parseInt(rows[0].total_count) : 0;
+    return { rows, total };
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch trends.');
+  }
+}
+
+export async function getLearningContentsPaginatedFromDb(
+  limit: number,
+  offset: number,
+  userId: string,
+  isAdmin: boolean
+): Promise<{ rows: LearningContent[]; total: number }> {
+  try {
+    if (isAdmin) {
+      const { rows } = await sql<LearningContent & { total_count: string }>`
+        SELECT
+          lc.id,
+          lc.author_id,
+          COALESCE(u.nickname, u.name, 'Unknown') as authorname,
+          COALESCE(a.image_url, u.image) as "authorImage",
+          lc.title,
+          lc.content,
+          lc.question,
+          lc.answer,
+          lc.difficulty,
+          lc.prerequisite_content_id,
+          lc.is_public,
+          lc.created_at,
+          lc.updated_at,
+          COUNT(*) OVER() AS total_count
+        FROM learning_contents lc
+        JOIN users u ON lc.author_id = u.id
+        LEFT JOIN avatars a ON u.avatar_id = a.id
+        ORDER BY lc.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+      const total = rows.length > 0 ? parseInt(rows[0].total_count) : 0;
+      return { rows, total };
+    } else {
+      const { rows } = await sql<LearningContent & { total_count: string }>`
+        SELECT
+          lc.id,
+          lc.author_id,
+          COALESCE(u.nickname, u.name, 'Unknown') as authorname,
+          COALESCE(a.image_url, u.image) as "authorImage",
+          lc.title,
+          lc.content,
+          lc.question,
+          lc.answer,
+          lc.difficulty,
+          lc.prerequisite_content_id,
+          lc.is_public,
+          lc.created_at,
+          lc.updated_at,
+          CASE
+            WHEN ulc.content_id IS NOT NULL THEN true
+            ELSE false
+          END as is_learned,
+          COUNT(*) OVER() AS total_count
+        FROM learning_contents lc
+        JOIN users u ON lc.author_id = u.id
+        LEFT JOIN avatars a ON u.avatar_id = a.id
+        LEFT JOIN user_learned_contents ulc ON lc.id = ulc.content_id AND ulc.user_id = ${userId}
+        WHERE lc.is_public = true
+          AND (
+            lc.prerequisite_content_id IS NULL
+            OR lc.prerequisite_content_id IN (
+              SELECT content_id FROM user_learned_contents WHERE user_id = ${userId}
+            )
+          )
+        ORDER BY lc.difficulty ASC, lc.created_at ASC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+      const total = rows.length > 0 ? parseInt(rows[0].total_count) : 0;
+      return { rows, total };
+    }
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch learning contents.');
+  }
+}
+
 export async function deleteReportById(id: string) {
   noStore();
   try {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createLearningContent, getAllLearningContents } from '@/app/lib/services';
+import { createLearningContent, getLearningContentsPaginated } from '@/app/lib/services';
 
 export async function POST(request: Request) {
   try {
@@ -25,16 +25,23 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const learningContents = await getAllLearningContents();
-    return NextResponse.json(learningContents, { status: 200 });
+    const { searchParams } = new URL(request.url);
+    const limit  = Math.min(Math.max(parseInt(searchParams.get('limit')  ?? '10'), 1), 50);
+    const offset = Math.max(parseInt(searchParams.get('offset') ?? '0'), 0);
+
+    const { rows, total } = await getLearningContentsPaginated(limit, offset);
+
+    return NextResponse.json({
+      items: rows,
+      total,
+      hasMore: offset + rows.length < total,
+    });
   } catch (error: unknown) {
     console.error('Error fetching learning contents:', error);
     let errorMessage = 'Failed to fetch learning contents.';
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    }
+    if (error instanceof Error) errorMessage = error.message;
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
