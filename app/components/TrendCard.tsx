@@ -18,7 +18,9 @@ export default function TrendCard({ trend, currentUserId }: TrendCardProps) {
 
   return (
     <div className="border p-4 rounded-lg shadow-md flex flex-col">
-      <h2 className="text-xl font-semibold mb-2">{trend.title}</h2>
+      <Link href={`/trends/${trend.id}`} className="hover:underline">
+        <h2 className="text-xl font-semibold mb-2">{trend.title}</h2>
+      </Link>
       <Link href={`/users/${trend.author_id}`} className="flex items-center space-x-2 text-sm text-gray-600 mb-2 hover:underline">
         <Avatar className="h-6 w-6">
           <AvatarImage src={trend.authorImage || ''} alt={trend.authorname || 'Avatar'} />
