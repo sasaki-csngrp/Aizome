@@ -12,3 +12,25 @@ export function formatDateToYYYYMMDD(dateString: string | Date): string {
     return 'Invalid Date';
   }
 }
+
+/**
+ * マークダウン記法を除去してプレーンテキストに変換する。
+ * 一覧カードのプレビュー表示に使用する。
+ */
+export function stripMarkdown(content: string): string {
+  return content
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`[^`]*`/g, "")
+    .replace(/!\[.*?\]\(.*?\)/g, "")
+    .replace(/\[([^\]]+)\]\(.*?\)/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/(\*\*|__)(.*?)\1/g, "$2")
+    .replace(/(\*|_)(.*?)\1/g, "$2")
+    .replace(/~~(.*?)~~/g, "$1")
+    .replace(/^>\s+/gm, "")
+    .replace(/^[-*+]\s+/gm, "")
+    .replace(/^\d+\.\s+/gm, "")
+    .replace(/\n{2,}/g, " ")
+    .replace(/\n/g, " ")
+    .trim();
+}

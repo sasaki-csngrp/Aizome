@@ -3,8 +3,7 @@
 import Link from 'next/link';
 import DeleteButton from '@/app/components/DeleteButton';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { formatDateToYYYYMMDD } from '@/app/lib/utils';
-import ContentWithLinks from '@/app/components/ContentWithLinks';
+import { formatDateToYYYYMMDD, stripMarkdown } from '@/app/lib/utils';
 import { Report } from '@/app/lib/models';
 
 interface TrendCardProps {
@@ -24,7 +23,7 @@ export default function TrendCard({ trend, currentUserId }: TrendCardProps) {
         <span>{trend.authorname || 'Unknown'}</span>
       </Link>
       <Link href={`/trends/${trend.id}`} className="text-gray-700 mb-4 line-clamp-3 flex-grow hover:text-blue-600 transition-colors">
-        <ContentWithLinks content={trend.content} />
+        {stripMarkdown(trend.content)}
       </Link>
       <div className="text-sm text-gray-500 mb-2">
         <p>投稿日: {formatDateToYYYYMMDD(trend.createdAt)}</p>

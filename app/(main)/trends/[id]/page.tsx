@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { formatDateToYYYYMMDD } from '@/app/lib/utils';
 import QuestClearPopup from '@/app/components/QuestClearPopup';
-import ContentWithLinks from '@/app/components/ContentWithLinks';
+import MarkdownRendererClient from '@/app/components/MarkdownRendererClient';
 
 interface Trend {
   id: string;
@@ -127,11 +127,7 @@ export default function TrendDetailPage() {
             <span>更新日: {formatDateToYYYYMMDD(trend.updatedAt)}</span>
           </div>
           
-          <div className="prose max-w-none">
-            <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-              <ContentWithLinks content={trend.content} />
-            </div>
-          </div>
+          <MarkdownRendererClient content={trend.content} />
         </article>
       </div>
       
