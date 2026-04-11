@@ -13,6 +13,9 @@ export function getMDXComponents(components: MDXComponents): MDXComponents {
     ...components,
     Video,
     Audio,
+    a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+      <a {...props} target="_blank" rel="noopener noreferrer" />
+    ),
     code: (props: CodeProps) => {
       const className: string | undefined = props?.className;
       const match = /language-(\w+)/.exec(className || "");

@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import DeleteButton from '@/app/components/DeleteButton';
+import ContentWithLinks from '@/app/components/ContentWithLinks';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { formatDateToYYYYMMDD, stripMarkdown } from '@/app/lib/utils';
 import { Report } from '@/app/lib/models';
@@ -12,6 +14,8 @@ interface TrendCardProps {
 }
 
 export default function TrendCard({ trend, currentUserId }: TrendCardProps) {
+  const router = useRouter();
+
   return (
     <div className="border p-4 rounded-lg shadow-md flex flex-col">
       <h2 className="text-xl font-semibold mb-2">{trend.title}</h2>
@@ -22,9 +26,20 @@ export default function TrendCard({ trend, currentUserId }: TrendCardProps) {
         </Avatar>
         <span>{trend.authorname || 'Unknown'}</span>
       </Link>
-      <Link href={`/trends/${trend.id}`} className="text-gray-700 mb-4 line-clamp-3 flex-grow hover:text-blue-600 transition-colors">
-        {stripMarkdown(trend.content)}
-      </Link>
+      <div
+        className="text-gray-700 mb-4 line-clamp-3 flex-grow hover:text-blue-600 transition-colors cursor-pointer"
+        onClick={() => router.push(`/trends/${trend.id}`)}
+        role="link"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            router.push(`/trends/${trend.id}`);
+          }
+        }}
+      >
+        <ContentWithLinks content={stripMarkdown(trend.content)} />
+      </div>
       <div className="text-sm text-gray-500 mb-2">
         <p>投稿日: {formatDateToYYYYMMDD(trend.createdAt)}</p>
         <p>更新日: {formatDateToYYYYMMDD(trend.updatedAt)}</p>

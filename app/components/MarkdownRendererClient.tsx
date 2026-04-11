@@ -85,6 +85,13 @@ export default function MarkdownRendererClient({ content }: Props) {
               </code>
             );
           },
+          a({ href, children, ...props }) {
+            return (
+              <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+                {children}
+              </a>
+            );
+          },
           video: VideoRenderer,
           audio: AudioRenderer,
         }}

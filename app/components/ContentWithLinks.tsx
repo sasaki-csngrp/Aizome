@@ -10,13 +10,16 @@ export default function ContentWithLinks({ content }: ContentWithLinksProps) {
     return content.split(urlRegex).map((part, index) => {
       if (part.match(urlRegex)) {
         return (
-          <span 
-            key={index} 
-            className="text-blue-500 hover:underline cursor-pointer" 
-            onClick={() => window.open(part, '_blank', 'noopener,noreferrer')}
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline"
+            onClick={(e) => e.stopPropagation()}
           >
             {part}
-          </span>
+          </a>
         );
       }
       return part;
