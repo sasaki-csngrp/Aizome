@@ -1,6 +1,6 @@
 import { sql } from '@vercel/postgres';
 import { unstable_noStore as noStore } from 'next/cache';
-import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent, UserLearnedContent, Quest, UserClearedQuest } from './models';
+import { NewReport, Report, User, Avatar, LearningContent, NewLearningContent, UserLearnedContent, Quest, UserClearedQuest, ApiKey } from './models';
 
 export async function insertReport(report: NewReport): Promise<Report> {
   try {
@@ -668,6 +668,93 @@ export async function insertUserClearedQuestToDb(userId: string, questId: string
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to insert user cleared quest.');
+  }
+}
+
+// ApiKey Database Functions
+
+export async function initApiKeysTable(): Promise<void> {
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id           UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+        name         VARCHAR(255) NOT NULL,
+        key_hash     VARCHAR(64)  NOT NULL UNIQUE,
+        created_by   VARCHAR(255),
+        created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+        last_used_at TIMESTAMP,
+        is_active    BOOLEAN      NOT NULL DEFAULT TRUE
+      )
+    `;
+  } catch (error) {
+    console.error('Error initializing api_keys table:', error);
+    throw new Error('Failed to initialize api_keys table.');
+  }
+}
+
+export async function insertApiKey(name: string, keyHash: string, createdBy: string | null): Promise<ApiKey> {
+  try {
+    const result = await sql<ApiKey>`
+      INSERT INTO api_keys (name, key_hash, created_by)
+      VALUES (${name}, ${keyHash}, ${createdBy})
+      RETURNING id, name, key_hash, created_by, created_at, last_used_at, is_active
+    `;
+    if (result.rows.length > 0) {
+      return result.rows[0];
+    }
+    throw new Error('Failed to insert api_key: No rows returned.');
+  } catch (error) {
+    console.error('Error inserting api_key:', error);
+    throw new Error('Failed to insert api_key into database.');
+  }
+}
+
+export async function getApiKeyByHash(keyHash: string): Promise<ApiKey | null> {
+  try {
+    const { rows } = await sql<ApiKey>`
+      SELECT id, name, key_hash, created_by, created_at, last_used_at, is_active
+      FROM api_keys
+      WHERE key_hash = ${keyHash} AND is_active = TRUE
+    `;
+    return rows.length > 0 ? rows[0] : null;
+  } catch (error) {
+    console.error('Error fetching api_key by hash:', error);
+    throw new Error('Failed to fetch api_key.');
+  }
+}
+
+export async function getApiKeysFromDb(): Promise<ApiKey[]> {
+  try {
+    const { rows } = await sql<ApiKey>`
+      SELECT id, name, key_hash, created_by, created_at, last_used_at, is_active
+      FROM api_keys
+      ORDER BY created_at DESC
+    `;
+    return rows;
+  } catch (error) {
+    console.error('Error fetching api_keys:', error);
+    throw new Error('Failed to fetch api_keys.');
+  }
+}
+
+export async function deactivateApiKey(id: string): Promise<void> {
+  try {
+    await sql`
+      UPDATE api_keys SET is_active = FALSE WHERE id = ${id}
+    `;
+  } catch (error) {
+    console.error('Error deactivating api_key:', error);
+    throw new Error('Failed to deactivate api_key.');
+  }
+}
+
+export async function updateApiKeyLastUsed(id: string): Promise<void> {
+  try {
+    await sql`
+      UPDATE api_keys SET last_used_at = NOW() WHERE id = ${id}
+    `;
+  } catch (error) {
+    console.error('Error updating api_key last_used_at:', error);
   }
 }
 

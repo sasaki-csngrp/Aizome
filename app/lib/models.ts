@@ -108,3 +108,13 @@ export interface UserClearedQuest {
   cleared_at: Date;
 }
 
+export interface ApiKey {
+  id: string;
+  name: string;
+  key_hash: string;
+  created_by: string | null;
+  created_at: Date;
+  last_used_at: Date | null;
+  is_active: boolean;
+}
+
