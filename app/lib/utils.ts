@@ -18,7 +18,14 @@ export function formatDateToYYYYMMDD(dateString: string | Date): string {
  * 一覧カードのプレビュー表示に使用する。
  */
 export function stripMarkdown(content: string): string {
-  return content
+  // URLをプレースホルダーで保護してからMarkdown除去を行う
+  const urls: string[] = [];
+  const protected_ = content.replace(/(https?:\/\/[^\s]+)/g, (url) => {
+    urls.push(url);
+    return `\x00URL${urls.length - 1}\x00`;
+  });
+
+  const stripped = protected_
     .replace(/```[\s\S]*?```/g, "")
     .replace(/`[^`]*`/g, "")
     .replace(/!\[.*?\]\(.*?\)/g, "")
@@ -33,4 +40,7 @@ export function stripMarkdown(content: string): string {
     .replace(/\n{2,}/g, " ")
     .replace(/\n/g, " ")
     .trim();
+
+  // URLを復元する
+  return stripped.replace(/\x00URL(\d+)\x00/g, (_, i) => urls[parseInt(i)]);
 }
